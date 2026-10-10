@@ -3,200 +3,615 @@
 <head><meta name="robots" content="noindex,nofollow">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CantoGo · Distribution Experiments 分发实验 Dashboard</title>
+<title>CantoGo 渠道实验 Distribution Experiments</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  :root{
-    --bg:#ffffff; --bg2:#f7f8fa; --bg3:#f0f2f5; --border:#e3e6eb; --border2:#d3d8df;
-    --text:#1b1f24; --muted:#5f6b7a; --faint:#8a95a3;
-    --accent:#0f766e; --accent-soft:#e6f4f2; --accent-ink:#0b5b55;
-    --high:#0f766e; --high-bg:#e6f4f2; --med:#a16207; --med-bg:#fdf6e3; --low:#6b7280; --low-bg:#f1f3f5;
-    --red:#b42318; --red-bg:#fdecea; --radius:10px; --shadow:0 1px 2px rgba(16,24,40,.05);
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--text);
-    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,"PingFang HK","Noto Sans HK","Noto Sans CJK SC",sans-serif}
-  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
-  .wrap{max-width:1240px;margin:0 auto;padding:24px 24px 64px}
-  header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:20px}
-  .brand h1{margin:0;font-size:22px;letter-spacing:-.01em} .brand p{margin:2px 0 0;color:var(--muted)}
-  .sync{text-align:right} .sync .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-  .sync .val{font-size:22px;font-weight:700} .sync .links{margin-top:4px;font-size:13px}
-  nav.jump{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;padding:10px 0;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(255,255,255,.95);z-index:5}
-  nav.jump a{color:var(--muted)}
-  section{margin-top:28px} section>h2{font-size:17px;margin:0 0 4px} section>.sub{color:var(--muted);margin:0 0 14px;font-size:13px}
-  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-  .kpi{border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;background:#fff;box-shadow:var(--shadow)}
-  .kpi .n{font-size:26px;font-weight:700;letter-spacing:-.02em} .kpi .t{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
-  .kpi .d{color:var(--faint);font-size:12px;margin-top:2px}
-  .board{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-  .ch{border:1px solid var(--border);border-top:3px solid var(--low);border-radius:var(--radius);padding:12px 14px;background:#fff;box-shadow:var(--shadow)}
-  .ch.live{border-top-color:var(--accent)} .ch.warm{border-top-color:var(--med)}
-  .ch h3{margin:0 0 4px;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:6px}
-  .ch .m{font-size:12px;color:var(--muted)} .ch .nx{margin-top:8px;font-size:12.5px;background:var(--accent-soft);color:var(--accent-ink);padding:6px 8px;border-radius:6px}
-  .badge{display:inline-block;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:600;white-space:nowrap}
-  .b-keep,.b-done,.b-live,.b-P1{background:var(--high-bg);color:var(--high)}
-  .b-iterate,.b-running,.b-warm,.b-P2{background:var(--med-bg);color:var(--med)}
-  .b-kill{background:var(--red-bg);color:var(--red)}
-  .b-pending,.b-planned,.b-off,.b-P3{background:var(--low-bg);color:var(--low)}
-  .b-ai{background:#f5f3ff;color:#6d28d9} .b-rp{background:#e0f2fe;color:#075985} .b-tc{background:var(--red-bg);color:var(--red)}
-  .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
-  select,input[type=search]{border:1px solid var(--border2);border-radius:6px;padding:6px 9px;background:#fff;font-size:13px}
-  input[type=search]{flex:1;min-width:220px}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
-  th{background:var(--bg2);font-weight:600;color:var(--muted);font-size:12px;white-space:nowrap;position:sticky;top:0;z-index:1}
-  tr:hover td{background:var(--bg2)} td.id{white-space:nowrap;font-weight:600}
-  .tablewrap{border:1px solid var(--border);border-radius:var(--radius);overflow:auto;max-height:620px}
-  .panel{border:1px solid var(--border);border-radius:var(--radius);padding:14px;background:#fff}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media (max-width:900px){.grid2{grid-template-columns:1fr}}
-  .timeline{border-left:2px solid var(--border);margin-left:6px;padding-left:16px}
-  .timeline .it{margin-bottom:14px} .timeline .dt{font-size:12px;color:var(--muted)}
-  .rec{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;background:#fff;margin-bottom:8px}
-  .rec .rk{font-size:20px;font-weight:700;color:var(--accent);width:28px;flex:none}
-  .muted{color:var(--muted)} .small{font-size:12px}
-  .empty{border:1px dashed var(--border2);border-radius:var(--radius);padding:16px;color:var(--muted);background:var(--bg2);font-size:13px}
-  footer{margin-top:40px;color:var(--faint);font-size:12px;border-top:1px solid var(--border);padding-top:12px}
+/* CantoGo shared UI v2 — same block is inlined in both dashboards (trends + distribution) */
+:root{
+  --bg:#ffffff; --bg2:#f6f7f9; --bg3:#eef1f4; --line:#e2e6eb; --line2:#cfd5dc;
+  --text:#111827; --text2:#374151; --muted:#4b5563;            /* muted = 7.6:1 on white */
+  --accent:#0f766e; --accent-ink:#115e59; --accent-soft:#e7f5f3;  /* 5.5:1 */
+  --hi:#166534; --hi-bg:#dcfce7; --hi-line:#86efac;
+  --md:#92400e; --md-bg:#fef3c7; --md-line:#fcd34d;
+  --lo:#374151; --lo-bg:#eef1f4; --lo-line:#cfd5dc;
+  --red:#b42318; --red-bg:#fdecea; --blue:#1e40af; --blue-bg:#e0e7ff; --violet:#5b21b6; --violet-bg:#ede9fe;
+  --r:14px; --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.04);
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Noto Sans SC","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--font)}
+a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(15,118,110,.35)}
+a:hover{text-decoration-color:currentColor}
+:focus-visible{outline:3px solid #5eead4;outline-offset:2px;border-radius:6px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+/* header */
+.hdr{padding:28px 0 18px}
+.hdr .row{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-start;justify-content:space-between}
+.hdr .kicker{font-size:15px;color:var(--muted);font-weight:600}
+.hdr h1{margin:2px 0 4px;font-size:30px;line-height:1.25;letter-spacing:-.01em}
+.hdr h1 small{font-size:20px;color:var(--muted);font-weight:600;margin-left:6px}
+.hdr p.lead{margin:0;color:var(--text2);max-width:640px}
+.updated{background:var(--accent-soft);border:1px solid #b7e1db;border-radius:var(--r);padding:12px 16px;min-width:260px}
+.updated .l{font-size:14px;color:var(--accent-ink);font-weight:700}
+.updated .v{font-size:22px;font-weight:800;line-height:1.3;color:var(--text)}
+.updated .s{font-size:14px;color:var(--muted)}
+.updated .s.stale{color:var(--red);font-weight:700}
+.hdr .links{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:15px}
+/* sticky nav */
+.nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.97);backdrop-filter:saturate(1.4) blur(6px);border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:12px}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;padding:8px 0}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{flex:none;text-decoration:none;color:var(--text2);font-size:15px;font-weight:600;padding:8px 14px;border-radius:999px;white-space:nowrap}
+.tabs a:hover{background:var(--bg2)}
+.tabs a.on{background:var(--text);color:#fff}
+.nav input[type=search]{width:260px;flex:none}
+/* sections */
+main{padding-bottom:72px}
+section.sec{padding-top:44px}
+.sec>h2{font-size:24px;line-height:1.3;margin:0 0 6px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec>h2 .en{font-size:17px;color:var(--muted);font-weight:600}
+.sec>.sub{color:var(--text2);margin:0 0 18px;max-width:760px}
+h3{font-size:19px;line-height:1.35;margin:0}
+.muted{color:var(--muted)} .small{font-size:14px} .nowrap{white-space:nowrap}
+/* today */
+.today{border:2px solid var(--accent);border-radius:18px;padding:22px 24px;background:linear-gradient(180deg,#f0faf8 0,#fff 120px)}
+.today>h2{margin:0 0 4px;font-size:26px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.today>h2 .en{font-size:18px;color:var(--muted);font-weight:600}
+.today ol{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:12px}
+.today li{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.today .num{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:17px}
+.lab{font-size:14px;font-weight:700;color:var(--accent-ink);letter-spacing:.02em}
+.today .tx{font-size:17px;line-height:1.6;color:var(--text)}
+.today .tx b{font-weight:800}
+.today .go{font-size:14px;margin-left:6px;white-space:nowrap}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.kpi{border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;background:#fff;box-shadow:var(--shadow)}
+.kpi .t{font-size:15px;color:var(--text2);font-weight:700}
+.kpi .n{font-size:34px;font-weight:800;line-height:1.2;margin:4px 0 2px;letter-spacing:-.02em}
+.kpi .d{font-size:14px;color:var(--muted)}
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.card{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:18px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;min-width:0}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.card .top h3 .en{display:block;font-size:15px;color:var(--muted);font-weight:600}
+.card .why{color:var(--text2)}
+.card.hl{border-left:5px solid var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;background:var(--bg2);border-radius:10px;padding:12px}
+.stats .v{font-size:20px;font-weight:800;line-height:1.25}
+.stats .k{font-size:14px;color:var(--muted);line-height:1.35}
+.big{font-size:20px;font-weight:800}
+.up{color:var(--hi)} .down{color:var(--red)}
+/* badges: color + text + icon, never color alone */
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 11px;font-size:14px;font-weight:700;white-space:nowrap;border:1px solid transparent;line-height:1.45}
+.sig-High{background:var(--hi-bg);color:var(--hi);border-color:var(--hi-line)}
+.sig-Medium{background:var(--md-bg);color:var(--md);border-color:var(--md-line)}
+.sig-Low{background:var(--lo-bg);color:var(--lo);border-color:var(--lo-line)}
+.bars{font-size:12px;letter-spacing:-1px}
+.b-good{background:var(--hi-bg);color:var(--hi);border-color:var(--hi-line)}
+.b-warn{background:var(--md-bg);color:var(--md);border-color:var(--md-line)}
+.b-bad{background:var(--red-bg);color:var(--red);border-color:#f5b5ae}
+.b-neutral{background:var(--lo-bg);color:var(--lo);border-color:var(--lo-line)}
+.b-blue{background:var(--blue-bg);color:var(--blue);border-color:#c7d2fe}
+.b-violet{background:var(--violet-bg);color:var(--violet);border-color:#ddd6fe}
+.b-new{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+/* tooltip: hover or tap/focus */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--bg3);color:var(--text2);font-size:13px;font-weight:800;cursor:help;position:relative;vertical-align:1px;font-style:normal;margin-left:3px}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:50%;top:26px;transform:translateX(-50%);width:max-content;max-width:280px;background:var(--text);color:#fff;font-size:14px;font-weight:500;line-height:1.5;padding:9px 12px;border-radius:8px;z-index:30;white-space:normal;text-align:left}
+.legend{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:15px;color:var(--text2);margin:0 0 18px}
+.legend summary{font-weight:700;color:var(--text);cursor:pointer}
+.legend ul{margin:8px 0 0;padding-left:20px}
+.legend li{margin:3px 0}
+/* toolbar + inputs */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 16px}
+input[type=search],select{max-width:100%;font:inherit;font-size:16px;border:1px solid var(--line2);border-radius:10px;padding:9px 12px;background:#fff;color:var(--text);min-height:44px}
+input[type=search]{min-width:220px;flex:1}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.seg button{font:inherit;font-size:15px;font-weight:600;border:0;background:#fff;color:var(--text2);padding:9px 14px;cursor:pointer;min-height:44px;border-right:1px solid var(--line2)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--text);color:#fff}
+label.chk{display:inline-flex;gap:8px;align-items:center;font-size:15px;color:var(--text2);cursor:pointer;min-height:44px}
+label.chk input{width:18px;height:18px}
+.count{font-size:15px;color:var(--muted)}
+.btn{font:inherit;font-size:15px;font-weight:700;border:1px solid var(--line2);background:#fff;color:var(--text);border-radius:10px;padding:10px 18px;cursor:pointer;min-height:44px}
+.btn:hover{border-color:var(--accent);color:var(--accent-ink)}
+.more{display:flex;justify-content:center;margin-top:16px}
+/* details */
+details.ev{border-top:1px solid var(--line);padding-top:10px}
+details.ev summary,details.fold summary{cursor:pointer;font-weight:700;color:var(--accent-ink);font-size:15px;min-height:32px;list-style-position:inside}
+details.fold{border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;background:#fff;margin-top:16px}
+.evl{list-style:none;margin:10px 0 0;padding:0}
+.evl li{padding:10px 0;border-bottom:1px solid var(--bg3);font-size:15px}
+.evl li:last-child{border-bottom:0}
+.evl .meta{font-size:14px;color:var(--muted)}
+.evl h4{margin:12px 0 2px;font-size:14px;color:var(--text2)}
+/* tables */
+.tw{border:1px solid var(--line);border-radius:var(--r);overflow:auto;background:#fff}
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+.t th,.t td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.t th{background:var(--bg2);font-weight:700;color:var(--text2);font-size:14px;white-space:nowrap;position:sticky;top:0;z-index:1}
+.t th[data-k]{cursor:pointer;user-select:none}
+.t th[data-k]::after{content:" ↕";color:#9ca3af}
+.t th.asc::after{content:" ↑";color:var(--text)} .t th.desc::after{content:" ↓";color:var(--text)}
+.t tr:hover td{background:#fafbfc}
+.t td.num{white-space:nowrap;font-variant-numeric:tabular-nums}
+/* chart */
+.panel{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:18px 20px;box-shadow:var(--shadow)}
+.panel h3{margin-bottom:4px}
+.chartbox{position:relative;width:100%}
+.keyrow{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--text2);margin:6px 0 10px}
+.keyrow i{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:-2px}
+/* lists: horizontal bars without a chart lib */
+.hbars{display:grid;gap:8px}
+.hbar{display:grid;grid-template-columns:minmax(150px,240px) 1fr 44px;gap:12px;align-items:center;font-size:15px}
+.hbar .track,.hbar .fill{display:block}
+.hbar .track{background:var(--bg3);border-radius:6px;height:14px;overflow:hidden}
+.hbar .fill{background:var(--accent);height:100%;border-radius:6px}
+.hbar .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+/* timeline */
+.tline{display:grid;gap:14px}
+.tline .it{border-left:4px solid var(--line2);padding:4px 0 4px 16px}
+.tline .it.good{border-left-color:var(--hi-line)} .tline .it.warn{border-left-color:var(--md-line)} .tline .it.bad{border-left-color:#f5b5ae}
+.tline .dt{font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.empty{border:1px dashed var(--line2);border-radius:var(--r);padding:18px;color:var(--text2);background:var(--bg2)}
+.note{background:var(--bg2);border-radius:10px;padding:10px 14px;color:var(--text2);font-size:15px}
+.callout{background:var(--accent-soft);border-radius:10px;padding:10px 14px;color:var(--accent-ink);font-size:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+footer.ft{border-top:1px solid var(--line);margin-top:56px;padding:18px 0 40px;color:var(--muted);font-size:14px}
+mark{background:#fef08a;color:inherit;border-radius:3px}
+/* responsive */
+.mobile-only{display:none}
+@media (max-width:820px){
+  .grid2{grid-template-columns:1fr}
+  .nav .wrap{flex-wrap:wrap;gap:0}
+  .tabs{flex:1 1 100%;min-width:0}
+  .nav input[type=search]{width:100%;margin:0 0 8px}
+}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .hdr h1{font-size:25px} .hdr h1 small{display:block;margin:0;font-size:17px}
+  .updated{width:100%} .updated .v{font-size:19px}
+  .nav input[type=search]{display:none}
+  .mobile-only{display:block}
+  .today{padding:16px}
+  .today li{grid-template-columns:32px 1fr;padding:12px}
+  .today .num{width:28px;height:28px;font-size:15px}
+  .cards{grid-template-columns:1fr}
+  .sec>h2{font-size:22px}
+  section.sec{padding-top:36px}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{padding:12px 14px} .kpi .n{font-size:26px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hbar{grid-template-columns:1fr 40px;gap:4px 10px}
+  .hbar .lbl{grid-column:1/-1}
+  /* tables become stacked cards */
+  table.t.stack,table.t.stack tbody{display:block;width:100%}
+  table.t.stack thead{display:none}
+  table.t.stack tr{display:block;border-bottom:1px solid var(--line);padding:10px 4px}
+  table.t.stack td{display:grid;grid-template-columns:104px minmax(0,1fr);overflow-wrap:anywhere;gap:10px;border:0;padding:4px 10px}
+  table.t.stack td::before{content:attr(data-label);font-size:14px;color:var(--muted);font-weight:700}
+  .tw{overflow:visible}
+  .toolbar>*{flex:1 1 100%}
+  .seg{display:flex} .seg button{flex:1}
+}
+
+.prog{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--bg3);margin:10px 0 8px}
+.prog span{display:block;height:100%}
+.rk{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;font-size:17px}
+.recs{display:grid;gap:12px}
+.rec{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;background:#fff;box-shadow:var(--shadow)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px}
+.kv dt{color:var(--muted);font-weight:700;white-space:nowrap} .kv dd{margin:0;min-width:0}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header class="top">
-  <div class="brand"><h1>CantoGo · Distribution Experiments 分发实验</h1>
-    <p>每个 channel 动作都是 experiment → 记录数据 → 找到最强 distribution channel</p></div>
-  <div class="sync"><div class="lbl">Last synced 最后同步</div><div class="val" id="synced"></div>
-    <div class="links"><a id="sheetLink" target="_blank">打开 Google Sheet ↗</a></div></div>
-</header>
-<nav class="jump"><a href="#kpi">KPIs</a><a href="#acct">IG Insights</a><a href="#board">Channel 状态</a><a href="#exps">Experiments 实验</a><a href="#posts">Post 表现</a><a href="#learn">Learnings 学习</a><a href="#rec">Recommended next tests 推荐</a></nav>
-
-<section id="kpi"><h2>KPIs 总览</h2><p class="sub">Experiments by status · channels live vs 预热 · posts logged</p><div class="kpis" id="kpis"></div></section>
-
-<section id="acct"><h2>IG account Insights 账号数据（@canto.go）</h2><p class="sub" id="acctSub">来自 Channel_Status（IG row）· last 30 days</p><div class="kpis" id="acctKpis"></div></section>
-
-<section id="board"><h2>Channel funnel / 状态看板</h2><p class="sub">每个 channel 的 phase 和 next test（来自 Channel_Status + Experiments）</p><div class="board" id="boardGrid"></div></section>
-
-<section id="exps"><h2>Experiments 实验 timeline / table</h2><p class="sub">按 channel / status / decision 筛选，或搜索任意字段</p>
-  <div class="filters">
-    <select id="fCh"><option value="">All channels 全部</option></select>
-    <select id="fSt"><option value="">All status 全部</option></select>
-    <select id="fDe"><option value="">All decisions 全部</option></select>
-    <input type="search" id="fQ" placeholder="Search 搜索 hypothesis / topic / notes…" />
-    <span class="small muted" id="fCount"></span>
+<header class="hdr"><div class="wrap">
+  <div class="row">
+    <div>
+      <div class="kicker">CantoGo · 增长 Growth</div>
+      <h1>渠道实验<small>Distribution Experiments</small></h1>
+      <p class="lead">每个渠道动作都是一个实验 → 记录数据 → 找到最强的分发渠道。</p>
+    </div>
+    <div class="updated" role="status">
+      <div class="l">最后更新 Last updated</div>
+      <div class="v" id="synced"></div>
+      <div class="s" id="fresh"></div>
+    </div>
   </div>
-  <div class="tablewrap"><table id="expTable"><thead><tr><th>ID</th><th>Start</th><th>Channel</th><th>Format</th><th>Variable 变量</th><th>Result 结果</th><th>Decision</th><th>Status</th><th>Notes</th></tr></thead><tbody></tbody></table></div>
-</section>
+  <div class="links">
+    <a href="https://toriluoo.github.io/cantogo-dashboards/trends.html">→ 趋势研究 Trends dashboard</a>
+    <a id="sheetLink" target="_blank" rel="noopener">打开 Google Sheet ↗</a>
+  </div>
+</div></header>
 
-<section id="posts"><h2>Post performance 帖子表现（vs 账号自身平均）</h2>
-  <p class="sub">新账号 → 每个 post 只和<b>自己账号的平均值</b>比较（1.0× = 平均；每个 post 用最新 check_date）。reach = IG “viewers”。<span class="badge b-ai">AI</span> = IG 标了 'AI content'，<span class="badge b-rp">RP</span> = 个人号转发 boosted。</p>
-  <div id="postCharts"></div>
-</section>
+<nav class="nav" aria-label="页面导航 Sections"><div class="wrap">
+  <div class="tabs">
+    <a href="#today">今日重点</a><a href="#hyps">假设</a><a href="#overview">账号数据</a><a href="#channels">渠道状态</a><a href="#exps">实验</a>
+    <a href="#posts">帖子表现</a><a href="#learn">学到什么</a><a href="#next">下一步</a>
+  </div>
+</div></nav>
 
-<section id="learn"><h2>Learnings feed 学习记录</h2><p class="sub">最新 learnings + decision（最新在上）</p><div class="panel"><div class="timeline" id="learnFeed"></div></div></section>
+<main class="wrap">
+  <section class="sec" id="today">
+    <div class="today">
+      <h2>今日重点 <span class="en">Today</span></h2>
+      <div class="muted small">根据最新数据自动生成 · auto-generated from the data below</div>
+      <ol id="todayList"></ol>
+    </div>
+  </section>
 
-<section id="rec"><h2>Recommended next tests 推荐下一步</h2><p class="sub">来自 Ideas_Backlog，按 priority (P1→P3) 再按 effort (S→L) 排序</p><div id="recList"></div></section>
+  <section class="sec" id="hyps">
+    <h2>假设 <span class="en">Hypotheses</span></h2>
+    <p class="sub">我们相信什么、为什么、怎么验证。来自 Sheet 的 Hypotheses 表。</p>
+    <div id="hypList"></div>
+  </section>
 
-<footer>Generated by <code>python3 build.py &amp;&amp; python3 render.py</code> from the xlsx export of the Sheet · <span id="foot"></span></footer>
-</div>
+  <section class="sec" id="overview">
+    <h2>账号数据 <span class="en">IG account · last 30 days</span></h2>
+    <p class="sub" id="acctSub"></p>
+    <div class="kpis" id="acctKpis"></div>
+    <div class="panel" style="margin-top:16px">
+      <h3>实验进度 <span class="muted small">Experiment progress</span></h3>
+      <div id="progress"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="channels">
+    <h2>渠道状态 <span class="en">Channels</span></h2>
+    <p class="sub">每个渠道现在在哪个阶段、下一个测试是什么。</p>
+    <div id="board"></div>
+  </section>
+
+  <section class="sec" id="exps">
+    <h2>实验 <span class="en">Experiments</span></h2>
+    <p class="sub">已完成的在前（最新在上），然后是计划中的。点“详情”看备注。</p>
+    <div class="toolbar">
+      <div class="seg" id="stSeg" role="group" aria-label="状态筛选"><button class="on" data-s="">全部 All</button><button data-s="done">已完成 Done</button><button data-s="running">进行中 Running</button><button data-s="planned">计划中 Planned</button></div>
+      <select id="fCh" aria-label="渠道"><option value="">全部渠道 All channels</option></select>
+      <input type="search" id="fQ" placeholder="搜索 假设 / 选题 / 备注…" aria-label="搜索实验" />
+      <span class="count" id="fCount"></span>
+    </div>
+    <div id="expCards"></div>
+    <details class="fold"><summary>表格视图 Table view（可排序 sortable）</summary><div id="expTable" style="margin-top:12px"></div></details>
+  </section>
+
+  <section class="sec" id="posts">
+    <h2>帖子表现 <span class="en">Post performance</span></h2>
+    <p class="sub">新账号：每个帖子只和<b>我们自己账号的平均</b>比较，不和大博主比。每个帖子用最新一次检查的数据。</p>
+    <details class="legend"><summary>指标说明 What the numbers mean</summary><ul>
+      <li><b>浏览 Views</b>：帖子被看到的次数（同一个人可以看多次）。</li>
+      <li><b>触达人数 Viewers</b>：看过的不同账号数（IG 叫 viewers，表里记作 reach）。</li>
+      <li><b>比账号平均高 X%</b>：这条帖子 ÷ 账号所有帖子的平均值。</li>
+      <li><span class="badge b-violet">AI 标签</span> = IG 给帖子打了 “AI content” 标签；<span class="badge b-blue">个人号转发</span> = 从 @toriluoo 转发 boost。</li>
+    </ul></details>
+    <div id="postWrap"></div>
+  </section>
+
+  <section class="sec" id="learn">
+    <h2>学到什么 <span class="en">Learnings</span></h2>
+    <p class="sub">已完成实验的结论和决定，最新在上。</p>
+    <div id="learnFeed"></div>
+  </section>
+
+  <section class="sec" id="next">
+    <h2>下一步推荐测试 <span class="en">Recommended next tests</span></h2>
+    <p class="sub">来自 Ideas_Backlog：先按优先级（P1 → P3），再按工作量（小 → 大）排序。</p>
+    <div id="recList"></div>
+  </section>
+
+  <footer class="ft">由 <code>./refresh.sh</code>（build.py → render.py）从 Sheet 的 xlsx 导出生成 · Generated from the xlsx export · <span id="foot"></span></footer>
+</main>
+
+<script id="data" type="application/json">{"Experiments": [{"exp_id": "E001", "date_start": "2026-10-07", "date_end": "2026-10-09", "channel": "IG", "account": "@canto.go", "phase": "预热", "format": "graphic-AI", "variable_tested": "AI-generated photo-style image（AI 生成写实图）baseline", "hypothesis": "AI 图做 filler 成本最低，能带来基础曝光 / AI image is the cheapest filler and still earns baseline reach", "post_urls": "https://www.instagram.com/canto.go/p/DeNWj0Jy6fz/", "topic": "点心 dim sum：6 道点心 + Jyutping", "metrics_to_watch": "likes, comments, shares, saves, reach, follows", "result_numbers": "@10/10 IG Insights: views 25 · viewers 5 · interactions 4 · likes 3 · comments 0 · shares 0 · saves 0 · profile visits 1 · follows 0 · accounts engaged 3（@10/9 manual: 3 likes · 0 comments · 1 share）", "learning": "Baseline 基线。IG 给贴上了 'AI content' label（confirmed），可能压低分发；单靠 AI 图起量慢（views 25 / viewers 5）。", "decision": "iterate", "status": "done", "notes": "New account → 只和自己账号的 posts 比较，不和 benchmark 比。AI label & URL Confirmed by Victoria 2026-10-10。"}, {"exp_id": "E002", "date_start": "2026-10-08", "date_end": "2026-10-09", "channel": "IG", "account": "@canto.go", "phase": "预热", "format": "graphic-AI", "variable_tested": "Personal repost boost：AI image（非 cartoon）从个人号 @toriluoo 转发 vs 不转发", "hypothesis": "个人号转发能给新账号冷启动带来第一批相关受众 / personal repost seeds the first niche audience", "post_urls": null, "topic": "茶餐厅 HK cafe ordering — 'now you know how to order at hk cafes 😋'", "metrics_to_watch": "views, viewers, likes, saves, profile_visits, follows_gained", "result_numbers": "@10/10 IG Insights: views 59 · viewers 31 · interactions 6 · likes 3 · comments 0 · shares 0 · saves 1 · profile visits 1 · follows 0 · accounts engaged 3；+1 similar niche account followed @canto.go after it", "learning": "Win = views/viewers。Personal repost 带来约 2.4–5x 其他 posts 的 views（59 vs 25 / 11）、约 6x viewers（31 vs 5），但 likes 持平（3）。还吸引到一个同类 niche 账号 follow。", "decision": "keep", "status": "done", "notes": "Decision: keep，key posts 都从 @toriluoo repost。Post↔test mapping Confirmed by Victoria 2026-10-10（10/8 茶餐厅 post，不是点心）。Post URL unknown → 留空。"}, {"exp_id": "E003", "date_start": "2026-10-08", "date_end": "2026-10-09", "channel": "IG", "account": "@canto.go", "phase": "预热", "format": "graphic-cartoon", "variable_tested": "Cartoon / 插画风 vs AI 写实风（brand aesthetic）", "hypothesis": "卡通风更贴品牌、不触发 'AI content' label → 更好的 engagement", "post_urls": null, "topic": "点心 dim sum — 'now you know what to order at dimsum 😋'", "metrics_to_watch": "views, viewers, saves, profile_visits, AI label (y/n)", "result_numbers": "@10/10 IG Insights: views 11 · viewers 5 · interactions 6 · likes 3 · comments 0 · shares 0 · saves 2（最多 most saves）· profile visits 2 · follows 0 · accounts engaged 3；IG 没标 AI content", "learning": "Reach 最低（views 11），但 saves（2）和 profile visits（2）最高，且没有 AI label → 卡通风内容更 'sticky'，但 reach 需要 repost 等 boost。", "decision": "iterate", "status": "done", "notes": "Next：A/B test cartoon + personal repost vs AI + personal repost（两边都 repost，避免 repost 混淆比较）→ 见 Ideas_Backlog I011。Mapping Confirmed by Victoria 2026-10-10（10/8 点心 post，不是茶餐厅）。Post URL unknown → 留空。"}, {"exp_id": "E004", "date_start": "2026-10-10", "date_end": null, "channel": "TikTok", "account": "@canto.go", "phase": "预热", "format": "warm-up (browse/engage) → reel", "variable_tested": "每天 10 分钟 warm-up 后开始发 education 内容", "hypothesis": "养号后再发，初始推荐流量更准 / warmed account gets better-targeted initial distribution", "post_urls": null, "topic": "benchmark 对标账号 proven topics", "metrics_to_watch": "views, follows_gained, profile_visits", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Daily 10-min warm-up reminder；warm-up start date ⚠ to confirm。"}, {"exp_id": "E005", "date_start": "2026-10-10", "date_end": null, "channel": "YT Shorts", "account": "TBD", "phase": "预热", "format": "warm-up → shorts", "variable_tested": "每天 10 分钟 warm-up；复用 TikTok/Reels 素材", "hypothesis": "Shorts 可零成本复用竖屏视频，额外 search 流量", "post_urls": null, "topic": "proven topics", "metrics_to_watch": "views, subs gained", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Channel handle ⚠ to confirm; start date ⚠ to confirm。"}, {"exp_id": "E006", "date_start": "2026-10-10", "date_end": null, "channel": "FB Groups", "account": "Victoria personal (TBD)", "phase": "预热", "format": "community posts / comments", "variable_tested": "加入 Cantonese / heritage learner groups，先贡献价值再软推广", "hypothesis": "FB Groups 里有高意向 heritage learners（ABC/海外家庭）", "post_urls": null, "topic": "learner pain points", "metrics_to_watch": "replies, DMs, link clicks", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "用哪个账号 & 目标 groups 列表 ⚠ to confirm。"}, {"exp_id": "E007", "date_start": "2026-10-10", "date_end": "2026-10-16", "channel": "IG", "account": "@canto.go", "phase": "test", "format": "graphic-cartoon (automated)", "variable_tested": "Cadence：每天 2 posts graphics（自动化 filler）", "hypothesis": "稳定 2/day 让新账号更快积累信号与 followers", "post_urls": null, "topic": "proven topics rotation", "metrics_to_watch": "follows/day, avg likes/shares per post", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Victoria 原话 '在微信上每天发两个 post' → 推断为 IG 语音输入误识别 ⚠ to confirm。Goal: 本周末前 by end of week。"}, {"exp_id": "E008", "date_start": "2026-10-14", "date_end": null, "channel": "IG", "account": "@canto.go", "phase": "test", "format": "reel", "variable_tested": "开始做 Reels（养号后）", "hypothesis": "Video > graphics 的分发力（Victoria 的判断）", "post_urls": null, "topic": "proven topics", "metrics_to_watch": "views, watch-through, shares, follows", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Start planned Wed 2026-10-14（mid next week，Confirmed by Victoria 2026-10-10）。"}, {"exp_id": "E009", "date_start": "TBD", "date_end": null, "channel": "UGC", "account": "@canto.go + TikTok", "phase": "test", "format": "AI UGC", "variable_tested": "AI UGC-style 视频（dansugc / ugcdrop.com）", "hypothesis": "AI UGC 能以低成本测试 talking-head hooks", "post_urls": null, "topic": "proven topics", "metrics_to_watch": "views, 3s hold, shares, follows", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Pipeline step 1。工具：dansugc, ugcdrop.com。"}, {"exp_id": "E010", "date_start": "TBD", "date_end": null, "channel": "TikTok", "account": "@canto.go", "phase": "test", "format": "slideshow", "variable_tested": "AI slideshow + 不同 hooks（第一张/第一句）", "hypothesis": "找到能复用到 ads/UGC 的 winning hooks", "post_urls": null, "topic": "proven topics", "metrics_to_watch": "views, swipe-through, saves", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Pipeline step 2 — 为未来 ads/UGC 准备 hook library。"}, {"exp_id": "E011", "date_start": "TBD", "date_end": null, "channel": "Reddit", "account": "Brand account TBD", "phase": "预热", "format": "text posts / comments", "variable_tested": "Reddit brand account：建品牌 + 找用户（r/Cantonese 等）", "hypothesis": "Reddit 可直接找到痛点用户并获得真实反馈", "post_urls": null, "topic": "learner pain points", "metrics_to_watch": "upvotes, comments, DMs, signups", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Account handle & target subreddits ⚠ to confirm。注意各 sub 的 self-promo 规则。"}, {"exp_id": "E012", "date_start": "TBD", "date_end": null, "channel": "UGC", "account": "TBD", "phase": "scale", "format": "real UGC", "variable_tested": "雇真人 UGC creators（gated：先有 proven template）", "hypothesis": "有了 proven template 再花钱，控制成本", "post_urls": null, "topic": "winning template", "metrics_to_watch": "CPV, follows, signups", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Gate：AI UGC/slideshow 找到 winning template 后才启动。Victoria 写的 'EGC' = UGC（Confirmed by Victoria 2026-10-10）。"}, {"exp_id": "E013", "date_start": "TBD", "date_end": null, "channel": "Influencer", "account": "TBD", "phase": "scale", "format": "influencer collab", "variable_tested": "Influencer collab（按 follower tier）", "hypothesis": "合适 tier 的 creator 带来高信任流量", "post_urls": null, "topic": "winning template", "metrics_to_watch": "reach, signups, CPA", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Next-next step。用 trends DB 的 creators roster（follower tiers）选人。"}], "Post_Log": [{"date": "2026-10-07", "channel": "IG", "account": "@canto.go", "url": "https://www.instagram.com/canto.go/p/DeNWj0Jy6fz/", "format": "graphic-AI", "topic": "点心 dim sum — 6 dishes + Jyutping", "AI_label": "y", "boosted_by_personal_repost": "n", "likes": 3, "comments": 0, "shares": 1, "saves": null, "views": null, "reach": null, "profile_visits": null, "follows_gained": null, "check_date": "2026-10-09", "exp_id": "E001", "notes": "@10/9 manual count；shares=1 与 10/10 Insights（shares 0）不一致 → 以 10/10 Insights 为准。", "interactions": null, "accounts_engaged": null, "_latest": false, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": null, "views": null, "reach": null, "profile_visits": null}}, {"date": "2026-10-08", "channel": "IG", "account": "@canto.go", "url": null, "format": "graphic-AI", "topic": "茶餐厅 HK cafe ordering — 'now you know how to order at hk cafes 😋'", "AI_label": "y", "boosted_by_personal_repost": "y", "likes": 3, "comments": 0, "shares": 1, "saves": null, "views": null, "reach": null, "profile_visits": null, "follows_gained": 1, "check_date": "2026-10-09", "exp_id": "E002", "notes": "@10/9 manual count（当时按 presumed mapping 记在 'fav' 点心 post 名下；mapping 已于 10/10 更正为茶餐厅 post）；follows_gained=1 = similar niche account follow。shares 与 10/10 Insights（0）不一致 → 以 10/10 为准。", "interactions": null, "accounts_engaged": null, "_latest": false, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": null, "views": null, "reach": null, "profile_visits": null}}, {"date": "2026-10-08", "channel": "IG", "account": "@canto.go", "url": null, "format": "graphic-cartoon", "topic": "点心 dim sum — 'now you know what to order at dimsum 😋'", "AI_label": "n", "boosted_by_personal_repost": "n", "likes": 3, "comments": 0, "shares": 2, "saves": null, "views": null, "reach": null, "profile_visits": null, "follows_gained": null, "check_date": "2026-10-09", "exp_id": "E003", "notes": "@10/9 manual count（当时按 presumed mapping 记在茶餐厅 post 名下；mapping 已于 10/10 更正为点心 post）。shares 与 10/10 Insights（0）不一致 → 以 10/10 为准。", "interactions": null, "accounts_engaged": null, "_latest": false, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": null, "views": null, "reach": null, "profile_visits": null}}, {"date": "2026-10-07", "channel": "IG", "account": "@canto.go", "url": "https://www.instagram.com/canto.go/p/DeNWj0Jy6fz/", "format": "graphic-AI", "topic": "点心 dim sum — 6 dishes + Jyutping", "AI_label": "y", "boosted_by_personal_repost": "n", "likes": 3, "comments": 0, "shares": 0, "saves": 0, "views": 25, "reach": 5, "profile_visits": 1, "follows_gained": 0, "check_date": "2026-10-10", "exp_id": "E001", "notes": "IG Insights @10/10。reach = IG 'viewers'。IG 标了 'AI content'（confirmed）。", "interactions": 4, "accounts_engaged": 3, "_latest": true, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": 0.0, "views": 0.79, "reach": 0.37, "profile_visits": 0.75}}, {"date": "2026-10-08", "channel": "IG", "account": "@canto.go", "url": null, "format": "graphic-AI", "topic": "茶餐厅 HK cafe ordering — 'now you know how to order at hk cafes 😋'", "AI_label": "y", "boosted_by_personal_repost": "y", "likes": 3, "comments": 0, "shares": 0, "saves": 1, "views": 59, "reach": 31, "profile_visits": 1, "follows_gained": 0, "check_date": "2026-10-10", "exp_id": "E002", "notes": "IG Insights @10/10。reach = IG 'viewers'。Repost from @toriluoo（confirmed）；URL unknown。Insights follows=0，但一个 similar niche account 之后 follow 了 @canto.go。AI_label=y presumed（AI image）⚠ to confirm。", "interactions": 6, "accounts_engaged": 3, "_latest": true, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": 1.0, "views": 1.86, "reach": 2.27, "profile_visits": 0.75}}, {"date": "2026-10-08", "channel": "IG", "account": "@canto.go", "url": null, "format": "graphic-cartoon", "topic": "点心 dim sum — 'now you know what to order at dimsum 😋'", "AI_label": "n", "boosted_by_personal_repost": "n", "likes": 3, "comments": 0, "shares": 0, "saves": 2, "views": 11, "reach": 5, "profile_visits": 2, "follows_gained": 0, "check_date": "2026-10-10", "exp_id": "E003", "notes": "IG Insights @10/10。reach = IG 'viewers'。IG 没标 AI content（confirmed）；URL unknown。", "interactions": 6, "accounts_engaged": 3, "_latest": true, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": 2.0, "views": 0.35, "reach": 0.37, "profile_visits": 1.5}}], "Channel_Status": [{"channel": "IG", "current_phase": "test (live)", "account_handle": "@canto.go", "warmup_start_date": "2026-10-07", "daily_warmup_tasks_10min": "回复评论/DM；在对标账号下留 3–5 条有价值评论；Stories 互动", "next_test": "E007 每天 2 posts graphics；I011 cartoon+repost vs AI+repost A/B → E008 Reels（Wed 2026-10-14）", "next_exp_id": "E007", "owner": "Victoria", "notes": "warm-up start = 首帖日期 ⚠ to confirm。@canto.go = professional account，Insights 可用；account-level 数字 = last 30 days @2026-10-10。", "insights_as_of": "2026-10-10", "views_30d": 110, "views_from_followers_pct": 41.8, "views_from_nonfollowers_pct": 58.2, "viewers_30d": 32, "interactions_30d": 14, "accounts_engaged_30d": 4, "profile_visits_30d": 38, "followers_gained_30d": 3, "total_followers": 3, "following": 14}, {"channel": "TikTok", "current_phase": "预热", "account_handle": "@canto.go", "warmup_start_date": "2026-10-10", "daily_warmup_tasks_10min": "10 min：刷 niche feed（Cantonese/粤语学习/HK food），点赞+有价值评论 5–10 条，follow 2–3 个对标账号，保存 proven topics", "next_test": "E004 → E010 AI slideshow + hooks", "next_exp_id": "E004", "owner": "Victoria", "notes": "start date ⚠ to confirm", "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "YT Shorts", "current_phase": "预热", "account_handle": "TBD", "warmup_start_date": "2026-10-10", "daily_warmup_tasks_10min": "10 min：看 Cantonese learning Shorts，点赞/订阅对标账号，评论 3 条", "next_test": "E005 复用竖屏素材", "next_exp_id": "E005", "owner": "Victoria", "notes": "handle & start date ⚠ to confirm", "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "FB Groups", "current_phase": "预热", "account_handle": "TBD (personal?)", "warmup_start_date": "2026-10-10", "daily_warmup_tasks_10min": "10 min：在 2–3 个 Cantonese/heritage learner groups 回答问题，不发链接", "next_test": "E006 value-first posts", "next_exp_id": "E006", "owner": "Victoria", "notes": "account & group list ⚠ to confirm", "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "Reddit", "current_phase": "planned", "account_handle": "TBD", "warmup_start_date": null, "daily_warmup_tasks_10min": "（启动后）10 min：r/Cantonese 等回答问题、记录 pain points", "next_test": "E011 brand account", "next_exp_id": "E011", "owner": "Victoria", "notes": null, "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "UGC", "current_phase": "planned", "account_handle": "—", "warmup_start_date": null, "daily_warmup_tasks_10min": "—", "next_test": "E009 AI UGC (dansugc / ugcdrop) → E012 real UGC (gated)", "next_exp_id": "E009", "owner": "Victoria", "notes": null, "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "Influencer", "current_phase": "planned", "account_handle": "—", "warmup_start_date": null, "daily_warmup_tasks_10min": "—", "next_test": "E013 collab via creators roster tiers", "next_exp_id": "E013", "owner": "Victoria", "notes": null, "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "Ads", "current_phase": "not started", "account_handle": "—", "warmup_start_date": null, "daily_warmup_tasks_10min": "—", "next_test": "用 E010 winning hooks 做 ads", "next_exp_id": null, "owner": "Victoria", "notes": null, "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}], "Ideas_Backlog": [{"idea_id": "I001", "idea": "Copy proven topic：food & ordering 点餐/点心/茶餐厅", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "shares, saves", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "已有 E003 正面信号"}, {"idea_id": "I002", "idea": "Copy proven topic：slang 俚语", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "shares, comments", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I003", "idea": "Copy proven topic：confusable pairs 易混词", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "saves", "effort": "S", "priority": "P2", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I004", "idea": "Copy proven topic：slow listening 慢速听力", "source": "benchmark creator 对标账号", "channel": "TikTok/Reels", "expected_signal": "views, watch-through, saves", "effort": "M", "priority": "P2", "status": "ready", "linked_exp": null, "notes": "需要音频/视频"}, {"idea_id": "I005", "idea": "Copy proven topic：speaking confidence 开口自信", "source": "benchmark creator 对标账号", "channel": "TikTok/Reels", "expected_signal": "comments, shares", "effort": "M", "priority": "P2", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I006", "idea": "Cartoon vs AI-photo style A/B", "source": "own data (E001 vs E003)", "channel": "IG", "expected_signal": "shares, AI label, reach", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "同 topic、同时段，只换风格"}, {"idea_id": "I007", "idea": "Personal repost vs no repost", "source": "own data (E002)", "channel": "IG", "expected_signal": "reach, follows_gained", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E002", "notes": "每次只变一个变量"}, {"idea_id": "I008", "idea": "Posting time test 发帖时间", "source": "best practice", "channel": "IG", "expected_signal": "reach, likes in first 2h", "effort": "S", "priority": "P2", "status": "idea", "linked_exp": null, "notes": "配合 2 posts/day：早 vs 晚"}, {"idea_id": "I009", "idea": "Carousel vs single image", "source": "best practice", "channel": "IG", "expected_signal": "saves, shares, reach", "effort": "S", "priority": "P2", "status": "idea", "linked_exp": null, "notes": "carousel 常有更高 saves"}, {"idea_id": "I010", "idea": "Hook variants for slideshows", "source": "pipeline step 2", "channel": "TikTok/IG", "expected_signal": "views, swipe-through", "effort": "M", "priority": "P1", "status": "idea", "linked_exp": "E010", "notes": "产出 hook library 给 ads/UGC 用"}, {"idea_id": "I011", "idea": "A/B：cartoon + personal repost vs AI + personal repost", "source": "own data (E002 vs E003)", "channel": "IG", "expected_signal": "views, viewers, saves, profile_visits, AI label", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "两边都从 @toriluoo repost，只换风格 → repost 不再混淆比较；同 topic、同时段。"}], "Hypotheses": [], "account_avgs": {"IG @canto.go": {"n_posts": 3, "n_rows": 6, "avg": {"likes": 3.0, "comments": 0.0, "shares": 0.0, "saves": 1.0, "views": 31.666666666666668, "reach": 13.666666666666666, "profile_visits": 1.3333333333333333}}}, "recommended": [{"idea_id": "I001", "idea": "Copy proven topic：food & ordering 点餐/点心/茶餐厅", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "shares, saves", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "已有 E003 正面信号"}, {"idea_id": "I002", "idea": "Copy proven topic：slang 俚语", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "shares, comments", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I006", "idea": "Cartoon vs AI-photo style A/B", "source": "own data (E001 vs E003)", "channel": "IG", "expected_signal": "shares, AI label, reach", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "同 topic、同时段，只换风格"}, {"idea_id": "I007", "idea": "Personal repost vs no repost", "source": "own data (E002)", "channel": "IG", "expected_signal": "reach, follows_gained", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E002", "notes": "每次只变一个变量"}, {"idea_id": "I011", "idea": "A/B：cartoon + personal repost vs AI + personal repost", "source": "own data (E002 vs E003)", "channel": "IG", "expected_signal": "views, viewers, saves, profile_visits, AI label", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "两边都从 @toriluoo repost，只换风格 → repost 不再混淆比较；同 topic、同时段。"}, {"idea_id": "I010", "idea": "Hook variants for slideshows", "source": "pipeline step 2", "channel": "TikTok/IG", "expected_signal": "views, swipe-through", "effort": "M", "priority": "P1", "status": "idea", "linked_exp": "E010", "notes": "产出 hook library 给 ads/UGC 用"}, {"idea_id": "I003", "idea": "Copy proven topic：confusable pairs 易混词", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "saves", "effort": "S", "priority": "P2", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I008", "idea": "Posting time test 发帖时间", "source": "best practice", "channel": "IG", "expected_signal": "reach, likes in first 2h", "effort": "S", "priority": "P2", "status": "idea", "linked_exp": null, "notes": "配合 2 posts/day：早 vs 晚"}, {"idea_id": "I009", "idea": "Carousel vs single image", "source": "best practice", "channel": "IG", "expected_signal": "saves, shares, reach", "effort": "S", "priority": "P2", "status": "idea", "linked_exp": null, "notes": "carousel 常有更高 saves"}, {"idea_id": "I004", "idea": "Copy proven topic：slow listening 慢速听力", "source": "benchmark creator 对标账号", "channel": "TikTok/Reels", "expected_signal": "views, watch-through, saves", "effort": "M", "priority": "P2", "status": "ready", "linked_exp": null, "notes": "需要音频/视频"}, {"idea_id": "I005", "idea": "Copy proven topic：speaking confidence 开口自信", "source": "benchmark creator 对标账号", "channel": "TikTok/Reels", "expected_signal": "comments, shares", "effort": "M", "priority": "P2", "status": "ready", "linked_exp": null, "notes": null}], "meta": {"synced_pt": "2026-10-10 10:58 PT", "sheet_url": "https://docs.google.com/spreadsheets/d/1mwMK6hNWnnDjQ17x_VE7WEnU_yJLyZJH4Xbr21X9VcY/edit", "source_xlsx": "/workspace/distribution/CantoGo_Distribution_Experiments.xlsx"}}</script>
 <script>
-const D = {"Experiments": [{"exp_id": "E001", "date_start": "2026-10-07", "date_end": "2026-10-09", "channel": "IG", "account": "@canto.go", "phase": "预热", "format": "graphic-AI", "variable_tested": "AI-generated photo-style image（AI 生成写实图）baseline", "hypothesis": "AI 图做 filler 成本最低，能带来基础曝光 / AI image is the cheapest filler and still earns baseline reach", "post_urls": "https://www.instagram.com/canto.go/p/DeNWj0Jy6fz/", "topic": "点心 dim sum：6 道点心 + Jyutping", "metrics_to_watch": "likes, comments, shares, saves, reach, follows", "result_numbers": "@10/10 IG Insights: views 25 · viewers 5 · interactions 4 · likes 3 · comments 0 · shares 0 · saves 0 · profile visits 1 · follows 0 · accounts engaged 3（@10/9 manual: 3 likes · 0 comments · 1 share）", "learning": "Baseline 基线。IG 给贴上了 'AI content' label（confirmed），可能压低分发；单靠 AI 图起量慢（views 25 / viewers 5）。", "decision": "iterate", "status": "done", "notes": "New account → 只和自己账号的 posts 比较，不和 benchmark 比。AI label & URL Confirmed by Victoria 2026-10-10。"}, {"exp_id": "E002", "date_start": "2026-10-08", "date_end": "2026-10-09", "channel": "IG", "account": "@canto.go", "phase": "预热", "format": "graphic-AI", "variable_tested": "Personal repost boost：AI image（非 cartoon）从个人号 @toriluoo 转发 vs 不转发", "hypothesis": "个人号转发能给新账号冷启动带来第一批相关受众 / personal repost seeds the first niche audience", "post_urls": null, "topic": "茶餐厅 HK cafe ordering — 'now you know how to order at hk cafes 😋'", "metrics_to_watch": "views, viewers, likes, saves, profile_visits, follows_gained", "result_numbers": "@10/10 IG Insights: views 59 · viewers 31 · interactions 6 · likes 3 · comments 0 · shares 0 · saves 1 · profile visits 1 · follows 0 · accounts engaged 3；+1 similar niche account followed @canto.go after it", "learning": "Win = views/viewers。Personal repost 带来约 2.4–5x 其他 posts 的 views（59 vs 25 / 11）、约 6x viewers（31 vs 5），但 likes 持平（3）。还吸引到一个同类 niche 账号 follow。", "decision": "keep", "status": "done", "notes": "Decision: keep，key posts 都从 @toriluoo repost。Post↔test mapping Confirmed by Victoria 2026-10-10（10/8 茶餐厅 post，不是点心）。Post URL unknown → 留空。"}, {"exp_id": "E003", "date_start": "2026-10-08", "date_end": "2026-10-09", "channel": "IG", "account": "@canto.go", "phase": "预热", "format": "graphic-cartoon", "variable_tested": "Cartoon / 插画风 vs AI 写实风（brand aesthetic）", "hypothesis": "卡通风更贴品牌、不触发 'AI content' label → 更好的 engagement", "post_urls": null, "topic": "点心 dim sum — 'now you know what to order at dimsum 😋'", "metrics_to_watch": "views, viewers, saves, profile_visits, AI label (y/n)", "result_numbers": "@10/10 IG Insights: views 11 · viewers 5 · interactions 6 · likes 3 · comments 0 · shares 0 · saves 2（最多 most saves）· profile visits 2 · follows 0 · accounts engaged 3；IG 没标 AI content", "learning": "Reach 最低（views 11），但 saves（2）和 profile visits（2）最高，且没有 AI label → 卡通风内容更 'sticky'，但 reach 需要 repost 等 boost。", "decision": "iterate", "status": "done", "notes": "Next：A/B test cartoon + personal repost vs AI + personal repost（两边都 repost，避免 repost 混淆比较）→ 见 Ideas_Backlog I011。Mapping Confirmed by Victoria 2026-10-10（10/8 点心 post，不是茶餐厅）。Post URL unknown → 留空。"}, {"exp_id": "E004", "date_start": "2026-10-10", "date_end": null, "channel": "TikTok", "account": "@canto.go", "phase": "预热", "format": "warm-up (browse/engage) → reel", "variable_tested": "每天 10 分钟 warm-up 后开始发 education 内容", "hypothesis": "养号后再发，初始推荐流量更准 / warmed account gets better-targeted initial distribution", "post_urls": null, "topic": "benchmark 对标账号 proven topics", "metrics_to_watch": "views, follows_gained, profile_visits", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Daily 10-min warm-up reminder；warm-up start date ⚠ to confirm。"}, {"exp_id": "E005", "date_start": "2026-10-10", "date_end": null, "channel": "YT Shorts", "account": "TBD", "phase": "预热", "format": "warm-up → shorts", "variable_tested": "每天 10 分钟 warm-up；复用 TikTok/Reels 素材", "hypothesis": "Shorts 可零成本复用竖屏视频，额外 search 流量", "post_urls": null, "topic": "proven topics", "metrics_to_watch": "views, subs gained", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Channel handle ⚠ to confirm; start date ⚠ to confirm。"}, {"exp_id": "E006", "date_start": "2026-10-10", "date_end": null, "channel": "FB Groups", "account": "Victoria personal (TBD)", "phase": "预热", "format": "community posts / comments", "variable_tested": "加入 Cantonese / heritage learner groups，先贡献价值再软推广", "hypothesis": "FB Groups 里有高意向 heritage learners（ABC/海外家庭）", "post_urls": null, "topic": "learner pain points", "metrics_to_watch": "replies, DMs, link clicks", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "用哪个账号 & 目标 groups 列表 ⚠ to confirm。"}, {"exp_id": "E007", "date_start": "2026-10-10", "date_end": "2026-10-16", "channel": "IG", "account": "@canto.go", "phase": "test", "format": "graphic-cartoon (automated)", "variable_tested": "Cadence：每天 2 posts graphics（自动化 filler）", "hypothesis": "稳定 2/day 让新账号更快积累信号与 followers", "post_urls": null, "topic": "proven topics rotation", "metrics_to_watch": "follows/day, avg likes/shares per post", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Victoria 原话 '在微信上每天发两个 post' → 推断为 IG 语音输入误识别 ⚠ to confirm。Goal: 本周末前 by end of week。"}, {"exp_id": "E008", "date_start": "2026-10-14", "date_end": null, "channel": "IG", "account": "@canto.go", "phase": "test", "format": "reel", "variable_tested": "开始做 Reels（养号后）", "hypothesis": "Video > graphics 的分发力（Victoria 的判断）", "post_urls": null, "topic": "proven topics", "metrics_to_watch": "views, watch-through, shares, follows", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Start planned Wed 2026-10-14（mid next week，Confirmed by Victoria 2026-10-10）。"}, {"exp_id": "E009", "date_start": "TBD", "date_end": null, "channel": "UGC", "account": "@canto.go + TikTok", "phase": "test", "format": "AI UGC", "variable_tested": "AI UGC-style 视频（dansugc / ugcdrop.com）", "hypothesis": "AI UGC 能以低成本测试 talking-head hooks", "post_urls": null, "topic": "proven topics", "metrics_to_watch": "views, 3s hold, shares, follows", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Pipeline step 1。工具：dansugc, ugcdrop.com。"}, {"exp_id": "E010", "date_start": "TBD", "date_end": null, "channel": "TikTok", "account": "@canto.go", "phase": "test", "format": "slideshow", "variable_tested": "AI slideshow + 不同 hooks（第一张/第一句）", "hypothesis": "找到能复用到 ads/UGC 的 winning hooks", "post_urls": null, "topic": "proven topics", "metrics_to_watch": "views, swipe-through, saves", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Pipeline step 2 — 为未来 ads/UGC 准备 hook library。"}, {"exp_id": "E011", "date_start": "TBD", "date_end": null, "channel": "Reddit", "account": "Brand account TBD", "phase": "预热", "format": "text posts / comments", "variable_tested": "Reddit brand account：建品牌 + 找用户（r/Cantonese 等）", "hypothesis": "Reddit 可直接找到痛点用户并获得真实反馈", "post_urls": null, "topic": "learner pain points", "metrics_to_watch": "upvotes, comments, DMs, signups", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Account handle & target subreddits ⚠ to confirm。注意各 sub 的 self-promo 规则。"}, {"exp_id": "E012", "date_start": "TBD", "date_end": null, "channel": "UGC", "account": "TBD", "phase": "scale", "format": "real UGC", "variable_tested": "雇真人 UGC creators（gated：先有 proven template）", "hypothesis": "有了 proven template 再花钱，控制成本", "post_urls": null, "topic": "winning template", "metrics_to_watch": "CPV, follows, signups", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Gate：AI UGC/slideshow 找到 winning template 后才启动。Victoria 写的 'EGC' = UGC（Confirmed by Victoria 2026-10-10）。"}, {"exp_id": "E013", "date_start": "TBD", "date_end": null, "channel": "Influencer", "account": "TBD", "phase": "scale", "format": "influencer collab", "variable_tested": "Influencer collab（按 follower tier）", "hypothesis": "合适 tier 的 creator 带来高信任流量", "post_urls": null, "topic": "winning template", "metrics_to_watch": "reach, signups, CPA", "result_numbers": null, "learning": null, "decision": "pending", "status": "planned", "notes": "Next-next step。用 trends DB 的 creators roster（follower tiers）选人。"}], "Post_Log": [{"date": "2026-10-07", "channel": "IG", "account": "@canto.go", "url": "https://www.instagram.com/canto.go/p/DeNWj0Jy6fz/", "format": "graphic-AI", "topic": "点心 dim sum — 6 dishes + Jyutping", "AI_label": "y", "boosted_by_personal_repost": "n", "likes": 3, "comments": 0, "shares": 1, "saves": null, "views": null, "reach": null, "profile_visits": null, "follows_gained": null, "check_date": "2026-10-09", "exp_id": "E001", "notes": "@10/9 manual count；shares=1 与 10/10 Insights（shares 0）不一致 → 以 10/10 Insights 为准。", "interactions": null, "accounts_engaged": null, "_latest": false, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": null, "views": null, "reach": null, "profile_visits": null}}, {"date": "2026-10-08", "channel": "IG", "account": "@canto.go", "url": null, "format": "graphic-AI", "topic": "茶餐厅 HK cafe ordering — 'now you know how to order at hk cafes 😋'", "AI_label": "y", "boosted_by_personal_repost": "y", "likes": 3, "comments": 0, "shares": 1, "saves": null, "views": null, "reach": null, "profile_visits": null, "follows_gained": 1, "check_date": "2026-10-09", "exp_id": "E002", "notes": "@10/9 manual count（当时按 presumed mapping 记在 'fav' 点心 post 名下；mapping 已于 10/10 更正为茶餐厅 post）；follows_gained=1 = similar niche account follow。shares 与 10/10 Insights（0）不一致 → 以 10/10 为准。", "interactions": null, "accounts_engaged": null, "_latest": false, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": null, "views": null, "reach": null, "profile_visits": null}}, {"date": "2026-10-08", "channel": "IG", "account": "@canto.go", "url": null, "format": "graphic-cartoon", "topic": "点心 dim sum — 'now you know what to order at dimsum 😋'", "AI_label": "n", "boosted_by_personal_repost": "n", "likes": 3, "comments": 0, "shares": 2, "saves": null, "views": null, "reach": null, "profile_visits": null, "follows_gained": null, "check_date": "2026-10-09", "exp_id": "E003", "notes": "@10/9 manual count（当时按 presumed mapping 记在茶餐厅 post 名下；mapping 已于 10/10 更正为点心 post）。shares 与 10/10 Insights（0）不一致 → 以 10/10 为准。", "interactions": null, "accounts_engaged": null, "_latest": false, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": null, "views": null, "reach": null, "profile_visits": null}}, {"date": "2026-10-07", "channel": "IG", "account": "@canto.go", "url": "https://www.instagram.com/canto.go/p/DeNWj0Jy6fz/", "format": "graphic-AI", "topic": "点心 dim sum — 6 dishes + Jyutping", "AI_label": "y", "boosted_by_personal_repost": "n", "likes": 3, "comments": 0, "shares": 0, "saves": 0, "views": 25, "reach": 5, "profile_visits": 1, "follows_gained": 0, "check_date": "2026-10-10", "exp_id": "E001", "notes": "IG Insights @10/10。reach = IG 'viewers'。IG 标了 'AI content'（confirmed）。", "interactions": 4, "accounts_engaged": 3, "_latest": true, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": 0.0, "views": 0.79, "reach": 0.37, "profile_visits": 0.75}}, {"date": "2026-10-08", "channel": "IG", "account": "@canto.go", "url": null, "format": "graphic-AI", "topic": "茶餐厅 HK cafe ordering — 'now you know how to order at hk cafes 😋'", "AI_label": "y", "boosted_by_personal_repost": "y", "likes": 3, "comments": 0, "shares": 0, "saves": 1, "views": 59, "reach": 31, "profile_visits": 1, "follows_gained": 0, "check_date": "2026-10-10", "exp_id": "E002", "notes": "IG Insights @10/10。reach = IG 'viewers'。Repost from @toriluoo（confirmed）；URL unknown。Insights follows=0，但一个 similar niche account 之后 follow 了 @canto.go。AI_label=y presumed（AI image）⚠ to confirm。", "interactions": 6, "accounts_engaged": 3, "_latest": true, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": 1.0, "views": 1.86, "reach": 2.27, "profile_visits": 0.75}}, {"date": "2026-10-08", "channel": "IG", "account": "@canto.go", "url": null, "format": "graphic-cartoon", "topic": "点心 dim sum — 'now you know what to order at dimsum 😋'", "AI_label": "n", "boosted_by_personal_repost": "n", "likes": 3, "comments": 0, "shares": 0, "saves": 2, "views": 11, "reach": 5, "profile_visits": 2, "follows_gained": 0, "check_date": "2026-10-10", "exp_id": "E003", "notes": "IG Insights @10/10。reach = IG 'viewers'。IG 没标 AI content（confirmed）；URL unknown。", "interactions": 6, "accounts_engaged": 3, "_latest": true, "_account_key": "IG @canto.go", "_vs_avg": {"likes": 1.0, "comments": null, "shares": null, "saves": 2.0, "views": 0.35, "reach": 0.37, "profile_visits": 1.5}}], "Channel_Status": [{"channel": "IG", "current_phase": "test (live)", "account_handle": "@canto.go", "warmup_start_date": "2026-10-07", "daily_warmup_tasks_10min": "回复评论/DM；在对标账号下留 3–5 条有价值评论；Stories 互动", "next_test": "E007 每天 2 posts graphics；I011 cartoon+repost vs AI+repost A/B → E008 Reels（Wed 2026-10-14）", "next_exp_id": "E007", "owner": "Victoria", "notes": "warm-up start = 首帖日期 ⚠ to confirm。@canto.go = professional account，Insights 可用；account-level 数字 = last 30 days @2026-10-10。", "insights_as_of": "2026-10-10", "views_30d": 110, "views_from_followers_pct": 41.8, "views_from_nonfollowers_pct": 58.2, "viewers_30d": 32, "interactions_30d": 14, "accounts_engaged_30d": 4, "profile_visits_30d": 38, "followers_gained_30d": 3, "total_followers": 3, "following": 14}, {"channel": "TikTok", "current_phase": "预热", "account_handle": "@canto.go", "warmup_start_date": "2026-10-10", "daily_warmup_tasks_10min": "10 min：刷 niche feed（Cantonese/粤语学习/HK food），点赞+有价值评论 5–10 条，follow 2–3 个对标账号，保存 proven topics", "next_test": "E004 → E010 AI slideshow + hooks", "next_exp_id": "E004", "owner": "Victoria", "notes": "start date ⚠ to confirm", "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "YT Shorts", "current_phase": "预热", "account_handle": "TBD", "warmup_start_date": "2026-10-10", "daily_warmup_tasks_10min": "10 min：看 Cantonese learning Shorts，点赞/订阅对标账号，评论 3 条", "next_test": "E005 复用竖屏素材", "next_exp_id": "E005", "owner": "Victoria", "notes": "handle & start date ⚠ to confirm", "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "FB Groups", "current_phase": "预热", "account_handle": "TBD (personal?)", "warmup_start_date": "2026-10-10", "daily_warmup_tasks_10min": "10 min：在 2–3 个 Cantonese/heritage learner groups 回答问题，不发链接", "next_test": "E006 value-first posts", "next_exp_id": "E006", "owner": "Victoria", "notes": "account & group list ⚠ to confirm", "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "Reddit", "current_phase": "planned", "account_handle": "TBD", "warmup_start_date": null, "daily_warmup_tasks_10min": "（启动后）10 min：r/Cantonese 等回答问题、记录 pain points", "next_test": "E011 brand account", "next_exp_id": "E011", "owner": "Victoria", "notes": null, "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "UGC", "current_phase": "planned", "account_handle": "—", "warmup_start_date": null, "daily_warmup_tasks_10min": "—", "next_test": "E009 AI UGC (dansugc / ugcdrop) → E012 real UGC (gated)", "next_exp_id": "E009", "owner": "Victoria", "notes": null, "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "Influencer", "current_phase": "planned", "account_handle": "—", "warmup_start_date": null, "daily_warmup_tasks_10min": "—", "next_test": "E013 collab via creators roster tiers", "next_exp_id": "E013", "owner": "Victoria", "notes": null, "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}, {"channel": "Ads", "current_phase": "not started", "account_handle": "—", "warmup_start_date": null, "daily_warmup_tasks_10min": "—", "next_test": "用 E010 winning hooks 做 ads", "next_exp_id": null, "owner": "Victoria", "notes": null, "insights_as_of": null, "views_30d": null, "views_from_followers_pct": null, "views_from_nonfollowers_pct": null, "viewers_30d": null, "interactions_30d": null, "accounts_engaged_30d": null, "profile_visits_30d": null, "followers_gained_30d": null, "total_followers": null, "following": null}], "Ideas_Backlog": [{"idea_id": "I001", "idea": "Copy proven topic：food & ordering 点餐/点心/茶餐厅", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "shares, saves", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "已有 E003 正面信号"}, {"idea_id": "I002", "idea": "Copy proven topic：slang 俚语", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "shares, comments", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I003", "idea": "Copy proven topic：confusable pairs 易混词", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "saves", "effort": "S", "priority": "P2", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I004", "idea": "Copy proven topic：slow listening 慢速听力", "source": "benchmark creator 对标账号", "channel": "TikTok/Reels", "expected_signal": "views, watch-through, saves", "effort": "M", "priority": "P2", "status": "ready", "linked_exp": null, "notes": "需要音频/视频"}, {"idea_id": "I005", "idea": "Copy proven topic：speaking confidence 开口自信", "source": "benchmark creator 对标账号", "channel": "TikTok/Reels", "expected_signal": "comments, shares", "effort": "M", "priority": "P2", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I006", "idea": "Cartoon vs AI-photo style A/B", "source": "own data (E001 vs E003)", "channel": "IG", "expected_signal": "shares, AI label, reach", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "同 topic、同时段，只换风格"}, {"idea_id": "I007", "idea": "Personal repost vs no repost", "source": "own data (E002)", "channel": "IG", "expected_signal": "reach, follows_gained", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E002", "notes": "每次只变一个变量"}, {"idea_id": "I008", "idea": "Posting time test 发帖时间", "source": "best practice", "channel": "IG", "expected_signal": "reach, likes in first 2h", "effort": "S", "priority": "P2", "status": "idea", "linked_exp": null, "notes": "配合 2 posts/day：早 vs 晚"}, {"idea_id": "I009", "idea": "Carousel vs single image", "source": "best practice", "channel": "IG", "expected_signal": "saves, shares, reach", "effort": "S", "priority": "P2", "status": "idea", "linked_exp": null, "notes": "carousel 常有更高 saves"}, {"idea_id": "I010", "idea": "Hook variants for slideshows", "source": "pipeline step 2", "channel": "TikTok/IG", "expected_signal": "views, swipe-through", "effort": "M", "priority": "P1", "status": "idea", "linked_exp": "E010", "notes": "产出 hook library 给 ads/UGC 用"}, {"idea_id": "I011", "idea": "A/B：cartoon + personal repost vs AI + personal repost", "source": "own data (E002 vs E003)", "channel": "IG", "expected_signal": "views, viewers, saves, profile_visits, AI label", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "两边都从 @toriluoo repost，只换风格 → repost 不再混淆比较；同 topic、同时段。"}], "account_avgs": {"IG @canto.go": {"n_posts": 3, "n_rows": 6, "avg": {"likes": 3.0, "comments": 0.0, "shares": 0.0, "saves": 1.0, "views": 31.666666666666668, "reach": 13.666666666666666, "profile_visits": 1.3333333333333333}}}, "recommended": [{"idea_id": "I001", "idea": "Copy proven topic：food & ordering 点餐/点心/茶餐厅", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "shares, saves", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "已有 E003 正面信号"}, {"idea_id": "I002", "idea": "Copy proven topic：slang 俚语", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "shares, comments", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I006", "idea": "Cartoon vs AI-photo style A/B", "source": "own data (E001 vs E003)", "channel": "IG", "expected_signal": "shares, AI label, reach", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "同 topic、同时段，只换风格"}, {"idea_id": "I007", "idea": "Personal repost vs no repost", "source": "own data (E002)", "channel": "IG", "expected_signal": "reach, follows_gained", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E002", "notes": "每次只变一个变量"}, {"idea_id": "I011", "idea": "A/B：cartoon + personal repost vs AI + personal repost", "source": "own data (E002 vs E003)", "channel": "IG", "expected_signal": "views, viewers, saves, profile_visits, AI label", "effort": "S", "priority": "P1", "status": "ready", "linked_exp": "E003", "notes": "两边都从 @toriluoo repost，只换风格 → repost 不再混淆比较；同 topic、同时段。"}, {"idea_id": "I010", "idea": "Hook variants for slideshows", "source": "pipeline step 2", "channel": "TikTok/IG", "expected_signal": "views, swipe-through", "effort": "M", "priority": "P1", "status": "idea", "linked_exp": "E010", "notes": "产出 hook library 给 ads/UGC 用"}, {"idea_id": "I003", "idea": "Copy proven topic：confusable pairs 易混词", "source": "benchmark creator 对标账号", "channel": "IG/TikTok", "expected_signal": "saves", "effort": "S", "priority": "P2", "status": "ready", "linked_exp": null, "notes": null}, {"idea_id": "I008", "idea": "Posting time test 发帖时间", "source": "best practice", "channel": "IG", "expected_signal": "reach, likes in first 2h", "effort": "S", "priority": "P2", "status": "idea", "linked_exp": null, "notes": "配合 2 posts/day：早 vs 晚"}, {"idea_id": "I009", "idea": "Carousel vs single image", "source": "best practice", "channel": "IG", "expected_signal": "saves, shares, reach", "effort": "S", "priority": "P2", "status": "idea", "linked_exp": null, "notes": "carousel 常有更高 saves"}, {"idea_id": "I004", "idea": "Copy proven topic：slow listening 慢速听力", "source": "benchmark creator 对标账号", "channel": "TikTok/Reels", "expected_signal": "views, watch-through, saves", "effort": "M", "priority": "P2", "status": "ready", "linked_exp": null, "notes": "需要音频/视频"}, {"idea_id": "I005", "idea": "Copy proven topic：speaking confidence 开口自信", "source": "benchmark creator 对标账号", "channel": "TikTok/Reels", "expected_signal": "comments, shares", "effort": "M", "priority": "P2", "status": "ready", "linked_exp": null, "notes": null}], "meta": {"synced_pt": "2026-10-10 09:54 PT", "sheet_url": "https://docs.google.com/spreadsheets/d/1mwMK6hNWnnDjQ17x_VE7WEnU_yJLyZJH4Xbr21X9VcY/edit", "source_xlsx": "/workspace/distribution/CantoGo_Distribution_Experiments.xlsx"}};
-const $ = s => document.querySelector(s);
-const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const badge = (v, cls) => v ? `<span class="badge b-${esc(cls || v)}">${esc(v)}</span>` : "";
-const tc = s => /to confirm/i.test(s || "") ? ' <span class="badge b-tc">to confirm</span>' : "";
-const E = D.Experiments || [], P = D.Post_Log || [], C = D.Channel_Status || [];
+/* CantoGo shared UI helpers v2 — same block is inlined in both dashboards */
+const UI = (() => {
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmtN = n => { if (n == null || n === "" || isNaN(+n)) return "—"; n = +n; if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,"")+"M"; if (Math.abs(n) >= 1e4) return Math.round(n/1e3)+"K"; if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,"")+"K"; return String(Math.round(n*100)/100); };
+  const snip = (s, n) => { s = String(s || ""); return s.length > n ? s.slice(0, n-1) + "…" : s; };
+  const tip = t => `<i class="tip" tabindex="0" role="note" aria-label="${esc(t)}" data-tip="${esc(t)}">?</i>`;
+  /* ratio vs a baseline (1.0 = usual) → plain Chinese */
+  const vsTxt = (x, who) => {
+    if (x == null || isNaN(+x)) return "—";
+    x = +x; who = who || "平时";
+    if (x >= 2) return `是${who}的 ${x.toFixed(1).replace(/\.0$/,"")} 倍`;
+    const p = Math.round((x - 1) * 100);
+    if (p === 0) return `和${who}持平`;
+    return p > 0 ? `比${who}高 ${p}%` : `比${who}低 ${-p}%`;
+  };
+  const vsCls = x => x == null ? "" : (+x >= 1.15 ? "up" : (+x <= 0.85 ? "down" : ""));
+  const SIG = {High:["强","High","▮▮▮"], Medium:["中","Medium","▮▮▯"], Low:["弱","Low","▮▯▯"]};
+  const sigBadge = s => { const m = SIG[s] || SIG.Low; return `<span class="badge sig-${esc(s in SIG ? s : "Low")}" title="信号强度 signal strength"><span class="bars" aria-hidden="true">${m[2]}</span>${m[0]} ${m[1]}</span>`; };
+  const badge = (txt, cls) => txt ? `<span class="badge ${cls || "b-neutral"}">${esc(txt)}</span>` : "";
+  const ago = d => {
+    if (!d || isNaN(d)) return "";
+    const h = (Date.now() - d.getTime()) / 36e5;
+    if (h < 1) return "刚刚更新 just now";
+    if (h < 24) return `${Math.round(h)} 小时前 ${Math.round(h)}h ago`;
+    const days = Math.floor(h / 24); return `${days} 天前 ${days}d ago`;
+  };
+  function freshness(el, iso) {
+    const d = new Date(iso); if (!el || isNaN(d)) return;
+    const h = (Date.now() - d.getTime()) / 36e5;
+    el.textContent = ago(d) + (h > 36 ? " · 数据可能过期 may be stale" : "");
+    if (h > 36) el.classList.add("stale");
+  }
+  /* sticky tabs: highlight the section in view */
+  function initNav() {
+    const links = [...document.querySelectorAll(".tabs a")];
+    const map = new Map(links.map(a => [a.getAttribute("href").slice(1), a]));
+    const io = new IntersectionObserver(es => {
+      es.forEach(e => { if (e.isIntersecting) { links.forEach(a => a.classList.remove("on")); const a = map.get(e.target.id); if (a) { a.classList.add("on"); a.scrollIntoView({block:"nearest", inline:"nearest"}); } } });
+    }, {rootMargin: "-80px 0px -65% 0px"});
+    map.forEach((a, id) => { const s = document.getElementById(id); if (s) io.observe(s); else a.remove(); });
+  }
+  /* sortable + searchable + paged table; stacks into cards on phones */
+  function table(o) {
+    // o: {el, cols:[{k,label,render,num,sort:false,tip}], rows, page, sort:{k,d}, empty, count}
+    const st = {k: (o.sort||{}).k, d: (o.sort||{}).d || -1, shown: o.page || 20, q: ""};
+    const el = typeof o.el === "string" ? document.getElementById(o.el) : o.el;
+    el.innerHTML = `<div class="tw"><table class="t stack"><thead><tr>${o.cols.map(c => `<th ${c.sort === false ? "" : `data-k="${esc(c.k)}"`} scope="col">${esc(c.label)}${c.tip ? tip(c.tip) : ""}</th>`).join("")}</tr></thead><tbody></tbody></table></div><div class="more"></div>`;
+    const tb = el.querySelector("tbody"), more = el.querySelector(".more");
+    el.querySelectorAll("th[data-k]").forEach(th => th.addEventListener("click", e => { if (e.target.closest(".tip")) return; const k = th.dataset.k; st.d = st.k === k ? -st.d : -1; st.k = k; draw(); }));
+    function rows() {
+      let r = (typeof o.rows === "function" ? o.rows() : o.rows).filter(x => !st.q || JSON.stringify(x).toLowerCase().includes(st.q));
+      if (st.k) { const col = o.cols.find(c => c.k === st.k) || {}; const val = col.val || (x => x[st.k]);
+        r = r.slice().sort((a, b) => { const x = val(a), y = val(b); if (x == null || x === "") return 1; if (y == null || y === "") return -1; return (typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y))) * st.d; }); }
+      return r;
+    }
+    function draw() {
+      const r = rows();
+      el.querySelectorAll("th[data-k]").forEach(th => { th.classList.remove("asc","desc"); if (th.dataset.k === st.k) th.classList.add(st.d > 0 ? "asc" : "desc"); });
+      tb.innerHTML = r.slice(0, st.shown).map(x => `<tr>${o.cols.map(c => `<td data-label="${esc(c.label)}"${c.num ? ' class="num"' : ""}>${c.render ? c.render(x) : esc(x[c.k])}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${o.cols.length}" class="muted">${esc(o.empty || "没有结果 No match")}</td></tr>`;
+      const left = r.length - st.shown;
+      more.innerHTML = left > 0 ? `<button class="btn" type="button">显示更多 Show ${Math.min(left, o.page || 20)} more <span class="muted">（还有 ${left} 条 / ${r.length}）</span></button>` + (left > (o.page||20) ? ` <button class="btn" type="button" data-all="1">全部显示 Show all</button>` : "") : (r.length > (o.page || 20) ? `<button class="btn" type="button" data-less="1">收起 Show less</button>` : "");
+      more.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.less) { st.shown = o.page || 20; el.scrollIntoView({block:"start"}); } else st.shown = b.dataset.all ? 1e9 : st.shown + (o.page || 20); draw(); });
+      if (o.count) o.count(r.length);
+    }
+    draw();
+    return { draw, search(q) { st.q = String(q || "").trim().toLowerCase(); st.shown = o.page || 20; draw(); } };
+  }
+  /* card list with show-more */
+  function list(o) {
+    // o: {el, items: fn|array, render, page, empty, count, cls}
+    const el = typeof o.el === "string" ? document.getElementById(o.el) : o.el;
+    const pg = o.page || 6; let shown = pg;
+    function draw(reset) {
+      if (reset) shown = pg;
+      const items = typeof o.items === "function" ? o.items() : o.items;
+      el.innerHTML = items.length ? `<div class="${o.cls || "cards"}">${items.slice(0, shown).map(o.render).join("")}</div>` : `<div class="empty">${esc(o.empty || "没有结果 No match")}</div>`;
+      const left = items.length - shown;
+      if (left > 0 || items.length > pg) {
+        const m = document.createElement("div"); m.className = "more";
+        m.innerHTML = left > 0 ? `<button class="btn" type="button" data-n="1">显示更多 Show ${Math.min(left, pg * 2)} more <span class="muted">（还有 ${left} 个 / ${items.length}）</span></button>` + (left > pg * 2 ? ` <button class="btn" type="button" data-all="1">全部显示 Show all</button>` : "") : `<button class="btn" type="button" data-less="1">收起 Show less</button>`;
+        m.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.less) { shown = pg; el.scrollIntoView({block:"start"}); } else shown = b.dataset.all ? items.length : shown + pg * 2; draw(); });
+        el.appendChild(m);
+      }
+      if (o.count) o.count(items.length);
+    }
+    draw();
+    return { draw };
+  }
+  return { esc, fmtN, snip, tip, vsTxt, vsCls, sigBadge, badge, ago, freshness, initNav, table, list };
+})();
 
-$("#synced").textContent = D.meta.synced_pt;
-$("#sheetLink").href = D.meta.sheet_url;
-$("#foot").textContent = "Last synced " + D.meta.synced_pt;
+</script>
+<script>
+(function(){
+"use strict";
+const {esc, fmtN, snip, tip, vsTxt, vsCls, badge} = UI;
+const D = JSON.parse(document.getElementById("data").textContent);
+const $ = id => document.getElementById(id);
+const E = D.Experiments || [], P = D.Post_Log || [], C = D.Channel_Status || [], AVG = D.account_avgs || {}, M = D.meta || {};
+const TC = /to confirm/i;
+const tcBadge = s => TC.test(s || "") ? " " + badge("⚠ 待确认", "b-warn") : "";
+const mmdd = d => /^\d{4}-\d\d-\d\d/.test(d || "") ? String(d).slice(5, 10).replace("-", "/") : (d || "");
+const DEC = {keep: ["✓ 保留 Keep", "b-good", "good"], iterate: ["↻ 迭代 Iterate", "b-warn", "warn"], kill: ["✕ 停止 Kill", "b-bad", "bad"], pending: ["… 待定 Pending", "b-neutral", ""]};
+const STA = {done: ["已完成 Done", "b-good"], running: ["进行中 Running", "b-blue"], planned: ["计划中 Planned", "b-neutral"]};
+const decB = d => { const m = DEC[String(d || "").toLowerCase()]; return m ? badge(m[0], m[1]) : badge(d, "b-neutral"); };
+const staB = s => { const m = STA[String(s || "").toLowerCase()]; return m ? badge(m[0], m[1]) : badge(s, "b-neutral"); };
+const phaseKind = p => { p = String(p || "").toLowerCase(); return p.includes("live") || p === "scale" ? "live" : p.includes("预热") ? "warm" : p.startsWith("test") ? "live" : p.includes("not") ? "off" : "plan"; };
+const PH = {live: ["● 进行中 Live", "b-good"], warm: ["◐ 预热 Warm-up", "b-warn"], plan: ["○ 计划中 Planned", "b-neutral"], off: ["– 未开始 Not started", "b-neutral"]};
+const shortTopic = t => String(t || "").split(/\s+[—–-]\s+|：/)[0];
 
-// KPIs
-const cnt = (arr, k, v) => arr.filter(x => String(x[k]||"").toLowerCase() === v).length;
-const phaseKind = p => { p = String(p||"").toLowerCase(); return p.includes("live") || p === "scale" ? "live" : p.includes("预热") ? "warm" : p.startsWith("test") ? "live" : "off"; };
-const live = C.filter(c => phaseKind(c.current_phase) === "live").length, warm = C.filter(c => phaseKind(c.current_phase) === "warm").length;
-const kp = [
-  ["Experiments 实验", E.length, `${cnt(E,"status","done")} done · ${cnt(E,"status","running")} running · ${cnt(E,"status","planned")} planned`],
-  ["Done 已完成", cnt(E,"status","done"), `${cnt(E,"decision","keep")} keep · ${cnt(E,"decision","iterate")} iterate · ${cnt(E,"decision","kill")} kill`],
-  ["Running 进行中", cnt(E,"status","running"), "status = running"],
-  ["Planned 计划中", cnt(E,"status","planned"), "pipeline 排队"],
-  ["Channels live", live, C.filter(c => phaseKind(c.current_phase)==="live").map(c=>c.channel).join(", ") || "—"],
-  ["Channels 预热中", warm, C.filter(c => phaseKind(c.current_phase)==="warm").map(c=>c.channel).join(", ") || "—"],
-  ["Posts logged 帖子", new Set(P.map(p => p.url || (p.date+p.topic))).size, `${P.length} check rows · ${Object.keys(D.account_avgs).length} account(s)`],
-];
-$("#kpis").innerHTML = kp.map(([t,n,d]) => `<div class="kpi"><div class="t">${t}</div><div class="n">${n}</div><div class="d">${esc(d)}</div></div>`).join("");
+/* last updated (meta.synced_pt = "YYYY-MM-DD HH:MM PT") */
+(function () {
+  const m = String(M.synced_pt || "").match(/(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d)/);
+  if (!m) { $("synced").textContent = M.synced_pt || "—"; return; }
+  const [y, mo, d, h, mi] = m.slice(1).map(Number);
+  const wd = "日一二三四五六"[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()];
+  $("synced").textContent = `${y}年${mo}月${d}日 周${wd} · ${(h % 12) || 12}:${String(mi).padStart(2, "0")} ${h < 12 ? "AM" : "PM"} PT`;
+  // PT offset: PDT (-7) or PST (-8); pick the one whose LA wall-clock hour matches
+  for (const off of [7, 8]) { const dt = new Date(Date.UTC(y, mo - 1, d, h + off, mi));
+    const hh = +new Intl.DateTimeFormat("en-US", {timeZone: "America/Los_Angeles", hour: "numeric", hourCycle: "h23"}).format(dt);
+    if (hh === h) { UI.freshness($("fresh"), dt.toISOString()); break; } }
+})();
+$("sheetLink").href = M.sheet_url || "#";
+$("foot").textContent = "最后同步 " + (M.synced_pt || "");
 
-// IG account-level Insights (Channel_Status IG row)
+const latestPosts = P.filter(p => p._latest).sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.exp_id || "").localeCompare(String(b.exp_id || "")));
 const IGc = C.find(c => c.channel === "IG" && c.views_30d != null);
-if (IGc) {
-  const f = v => v ?? "–";
-  $("#acctSub").textContent = `${IGc.account_handle} · professional account · last 30 days as of ${IGc.insights_as_of}`;
-  const ak = [
-    ["Views 30d", f(IGc.views_30d), `${f(IGc.views_from_followers_pct)}% followers · ${f(IGc.views_from_nonfollowers_pct)}% non-followers`],
-    ["Viewers 30d", f(IGc.viewers_30d), "unique accounts reached"],
-    ["Interactions 30d", f(IGc.interactions_30d), `${f(IGc.accounts_engaged_30d)} accounts engaged`],
-    ["Profile visits 30d", f(IGc.profile_visits_30d), "主页访问"],
-    ["Followers", f(IGc.total_followers), `+${f(IGc.followers_gained_30d)} in 30d · following ${f(IGc.following)}`],
-  ];
-  $("#acctKpis").innerHTML = ak.map(([t,n,d]) => `<div class="kpi"><div class="t">${t}</div><div class="n">${esc(n)}</div><div class="d">${esc(d)}</div></div>`).join("");
-} else $("#acctKpis").innerHTML = '<div class="empty">Channel_Status 还没有 account Insights</div>';
+const doneE = E.filter(e => e.learning).sort((a, b) => String(b.date_end || b.date_start).localeCompare(String(a.date_end || a.date_start)) || String(b.exp_id).localeCompare(String(a.exp_id)));
+const whyFlags = p => [p.boosted_by_personal_repost === "y" ? "从个人号 @toriluoo 转发" : null, p.AI_label === "y" ? "有 AI 标签" : (p.AI_label === "n" ? "没有 AI 标签" : null), p.format ? String(p.format).replace("graphic-", "") + " 风格" : null].filter(Boolean);
 
-// Board
-const ORDER = ["IG","TikTok","YT Shorts","FB Groups","Reddit","UGC","Influencer","Ads"];
-const chans = [...C].sort((a,b) => (ORDER.indexOf(a.channel)+99)%99 - (ORDER.indexOf(b.channel)+99)%99);
-$("#boardGrid").innerHTML = chans.map(c => {
-  const k = phaseKind(c.current_phase), ex = E.filter(e => e.channel === c.channel);
-  return `<div class="ch ${k}"><h3>${esc(c.channel)} ${badge(c.current_phase, k)}</h3>
-    <div class="m">${esc(c.account_handle||"—")}${c.warmup_start_date ? " · since "+esc(c.warmup_start_date) : ""}${tc(c.notes)}</div>
-    <div class="m">${ex.length} experiment(s) · ${ex.filter(e=>e.status==="done").length} done</div>
-    ${c.daily_warmup_tasks_10min && c.daily_warmup_tasks_10min !== "—" ? `<div class="m" style="margin-top:6px">⏱ ${esc(c.daily_warmup_tasks_10min)}</div>` : ""}
-    <div class="nx"><b>Next:</b> ${esc(c.next_test||"—")}</div></div>`;
-}).join("");
+/* ---------- 今日重点 Today ---------- */
+(function renderToday() {
+  const items = [];
+  const withViews = latestPosts.filter(p => p.views != null);
+  if (withViews.length) {
+    const best = withViews.slice().sort((a, b) => b.views - a.views)[0];
+    const v = best._vs_avg || {};
+    let t = `<b>${esc(shortTopic(best.topic))}</b>（${mmdd(best.date)}，${esc(best.exp_id || "")}）：浏览 <b>${best.views}</b>（${esc(vsTxt(v.views, "账号平均"))}）· 触达 <b>${best.reach ?? "—"}</b> 人（${esc(vsTxt(v.reach, "平均"))}）。原因：${esc(whyFlags(best)[0] || "—")}。`;
+    const saver = latestPosts.filter(p => p.saves != null).sort((a, b) => b.saves - a.saves)[0];
+    if (saver && saver !== best && saver.saves > 0) t += ` 收藏最多的是 <b>${esc(shortTopic(saver.topic))}</b>（${saver.saves} 收藏，${esc(whyFlags(saver).slice(1).join("、"))}）。`;
+    items.push(["最佳帖子 Best post", t, "#posts"]);
+  }
+  if (doneE.length) {
+    const k = doneE.find(e => String(e.decision).toLowerCase() === "keep") || doneE[0];
+    items.push(["最新结论 Latest learning", `<b>${esc(k.exp_id)}</b> ${esc(snip(k.variable_tested, 60))} → ${decB(k.decision)}<br>${esc(snip(k.learning, 140))}`, "#learn"]);
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const liveCh = new Set(C.filter(c => phaseKind(c.current_phase) === "live").map(c => c.channel));   // live channels first
+  const planned = E.filter(e => String(e.status).toLowerCase() !== "done" && /^\d{4}-/.test(e.date_start || "")).sort((a, b) => String(a.date_start).localeCompare(String(b.date_start)) || (liveCh.has(b.channel) - liveCh.has(a.channel)) || String(a.exp_id).localeCompare(String(b.exp_id)));
+  const rec = (D.recommended || [])[0];
+  if (planned.length || rec) {
+    const soon = planned.filter(e => (e.date_end || e.date_start) >= today).slice(0, 2);
+    let t = soon.length ? "已排期：" + soon.map(e => `<b>${esc(e.exp_id)}</b> ${esc(e.channel)} ${esc(snip(e.variable_tested, 40))}（${mmdd(e.date_start)} 开始）`).join("；") + "。" : "";
+    if (rec) t += ` 推荐下一个测试：<b>${esc(rec.idea_id)} ${esc(rec.idea)}</b>（${esc(rec.priority)}，工作量 ${esc({S: "小", M: "中", L: "大"}[rec.effort] || rec.effort)}）。`;
+    items.push(["下一个测试 Next test", t, "#next"]);
+  }
+  if (IGc) items.push(["账号 30 天 Account (30d)", `浏览 <b>${IGc.views_30d}</b> 次，其中 <b>${IGc.views_from_nonfollowers_pct ?? "—"}%</b> 来自非粉丝（= 在触达新的人）· 主页访问 ${IGc.profile_visits_30d ?? "—"} · 粉丝 <b>${IGc.total_followers ?? "—"}</b>（30 天 +${IGc.followers_gained_30d ?? 0}）。`, "#overview"]);
+  const tcs = [...E.filter(e => TC.test(e.notes)).map(e => e.exp_id), ...C.filter(c => TC.test(c.notes)).map(c => c.channel + " 渠道")];
+  if (tcs.length) items.push(["需要你确认 Needs your confirmation", `有 <b>${tcs.length}</b> 项标了 ⚠ 待确认：${esc(tcs.join("、"))}。`, "#exps"]);
+  $("todayList").innerHTML = items.slice(0, 5).map((x, i) => `<li><span class="num">${i + 1}</span><div><div class="lab">${x[0]}</div><div class="tx">${x[1]} <a class="go" href="${x[2]}">查看 →</a></div></div></li>`).join("") || '<li><span class="num">–</span><div class="tx">还没有足够数据。</div></li>';
+})();
 
-// Experiments table
-const uniq = k => [...new Set(E.map(e => e[k]).filter(Boolean))];
-[["#fCh","channel"],["#fSt","status"],["#fDe","decision"]].forEach(([s,k]) => uniq(k).forEach(v => $(s).insertAdjacentHTML("beforeend", `<option>${esc(v)}</option>`)));
-function drawExp(){
-  const ch=$("#fCh").value, st=$("#fSt").value, de=$("#fDe").value, q=$("#fQ").value.trim().toLowerCase();
-  const rows = E.filter(e => (!ch||e.channel===ch)&&(!st||e.status===st)&&(!de||e.decision===de)&&(!q||Object.values(e).join(" ").toLowerCase().includes(q)));
-  $("#fCount").textContent = `${rows.length} / ${E.length}`;
-  $("#expTable tbody").innerHTML = rows.map(e => `<tr><td class="id">${esc(e.exp_id)}</td><td>${esc(e.date_start)}${e.date_end?"<br><span class='small muted'>→ "+esc(e.date_end)+"</span>":""}</td>
-    <td>${esc(e.channel)}<br><span class="small muted">${esc(e.account)}</span></td><td>${esc(e.format)}<br><span class="small muted">${esc(e.phase)}</span></td>
-    <td>${esc(e.variable_tested)}<br><span class="small muted">H: ${esc(e.hypothesis)}</span></td>
-    <td>${esc(e.result_numbers)||"<span class='muted'>—</span>"}${e.post_urls?`<br><a class="small" target="_blank" href="${esc(e.post_urls)}">post ↗</a>`:""}</td>
-    <td>${badge(e.decision)}</td><td>${badge(e.status)}</td><td class="small">${esc(e.notes)}${tc(e.notes)}</td></tr>`).join("") || `<tr><td colspan="9" class="muted">No match 没有结果</td></tr>`;
-}
-["#fCh","#fSt","#fDe","#fQ"].forEach(s => $(s).addEventListener("input", drawExp)); drawExp();
+/* ---------- Hypotheses ---------- */
+(function renderHyps() {
+  const H = D.Hypotheses || [];
+  const HS = {idea: ["💡 想法 Idea", "b-neutral"], designing: ["✎ 设计中 Designing", "b-blue"], testing: ["⏳ 测试中 Testing", "b-warn"], validated: ["✓ 已验证 Validated", "b-good"], invalidated: ["✕ 已否定 Invalidated", "b-bad"]};
+  const hsB = s => { const m = HS[String(s || "").trim().toLowerCase()]; return m ? badge(m[0], m[1]) : badge(s || "未设置 No status", "b-neutral"); };
+  const blank = v => v == null || String(v).trim() === "";
+  const order = {testing: 0, designing: 1, idea: 2, validated: 3, invalidated: 4};
+  const rows = H.filter(h => !blank(h.hypothesis) || !blank(h.hyp_id)).sort((a, b) => ((order[String(a.status || "").toLowerCase()] ?? 5) - (order[String(b.status || "").toLowerCase()] ?? 5)) || String(a.hyp_id || "").localeCompare(String(b.hyp_id || "")));
+  const expIds = new Set(E.map(e => e.exp_id));
+  const links = v => blank(v) ? '<span class="muted">还没有 none yet</span>' : String(v).split(/[,，;；\s]+/).filter(Boolean).map(x => badge(x, expIds.has(x) ? "b-blue" : "b-neutral")).join(" ");
+  UI.list({el: "hypList", items: rows, page: 6,
+    empty: "还没有假设。Sheet 里加上 Hypotheses 表后运行 ./refresh.sh 就会显示。No hypotheses yet — add the Hypotheses tab, then run ./refresh.sh.",
+    render: h => `<article class="card">
+      <div class="top"><div class="small muted"><b style="color:var(--text)">${esc(h.hyp_id || "")}</b>${h.date_added ? " · " + esc(h.date_added) : ""}${h.owner ? " · " + esc(h.owner) : ""}</div>${hsB(h.status)}</div>
+      <h3 style="font-size:18px">${esc(h.hypothesis || "—")}</h3>
+      <dl class="kv"><dt>为什么</dt><dd>${blank(h.why_we_think_so) ? '<span class="muted">TBD</span>' : esc(h.why_we_think_so)}</dd>
+        <dt>怎么测</dt><dd>${blank(h.how_to_test) ? '<span class="muted">TBD</span>' : esc(h.how_to_test)}</dd>
+        ${blank(h.success_metric) ? "" : `<dt>成功标准</dt><dd>${esc(h.success_metric)}</dd>`}
+        <dt>相关实验</dt><dd>${links(h.linked_experiments)}</dd></dl>
+      ${blank(h.evidence_so_far) ? "" : `<div class="callout"><b>目前证据：</b>${esc(h.evidence_so_far)}</div>`}
+      ${blank(h.ICP_link) && blank(h.notes) ? "" : `<details class="ev"><summary>详情 Details${tcBadge(h.notes)}</summary>${blank(h.ICP_link) ? "" : `<p class="small" style="margin:8px 0 4px"><b>ICP：</b>${/^https?:/.test(h.ICP_link) ? `<a href="${esc(h.ICP_link)}" target="_blank" rel="noopener">${esc(h.ICP_link)}</a>` : esc(h.ICP_link)}</p>`}${blank(h.notes) ? "" : `<p class="small" style="margin:4px 0">${esc(h.notes)}</p>`}</details>`}
+    </article>`});
+})();
 
-// Post charts per account
-const MET = [["views","#0f766e"],["reach","#14b8a6"],["likes","#a16207"],["saves","#075985"],["profile_visits","#6d28d9"],["shares","#3730a3"]];
-Object.entries(D.account_avgs).forEach(([acct, info], idx) => {
-  const ps = P.filter(p => p._account_key === acct && p._latest).sort((a,b) => String(a.date).localeCompare(String(b.date)));
-  const id = "pc"+idx;
-  const avgTxt = MET.map(([m]) => info.avg[m]!=null ? `${m} ${info.avg[m].toFixed(2)}` : null).filter(Boolean).join(" · ");
-  $("#postCharts").insertAdjacentHTML("beforeend", `<div class="panel" style="margin-bottom:14px"><b>${esc(acct)}</b> <span class="small muted">${info.n_posts} posts（latest check）· ${info.n_rows} check rows · account avg: ${esc(avgTxt)}</span>
-    <div class="grid2" style="margin-top:10px"><div style="height:280px"><canvas id="${id}"></canvas></div>
-    <div class="tablewrap" style="max-height:280px"><table><thead><tr><th>Date</th><th>Topic</th><th>Flags</th><th>Views / Viewers</th><th>L / C / S / Sv</th><th>Profile visits</th><th>vs avg (views)</th></tr></thead><tbody>
-    ${ps.map(p => `<tr><td>${esc(p.date)}</td><td>${p.url?`<a target="_blank" href="${esc(p.url)}">${esc(p.topic)}</a>`:esc(p.topic)}${tc(p.notes)}<br><span class="small muted">${esc(p.format)} · ${esc(p.exp_id||"")}</span></td>
-      <td>${p.AI_label==="y"?badge("AI","ai"):""} ${p.boosted_by_personal_repost==="y"?badge("RP","rp"):""}</td>
-      <td>${p.views??"–"} / ${p.reach??"–"}</td><td>${[p.likes,p.comments,p.shares,p.saves].map(v=>v??"–").join(" / ")}</td><td>${p.profile_visits??"–"}</td><td>${p._vs_avg.views!=null?p._vs_avg.views.toFixed(2)+"×":"–"}<br><span class="small muted">@${esc(p.check_date)}</span></td></tr>`).join("")}
-    </tbody></table></div></div></div>`);
-  const labels = ps.map(p => [`${p.date}${p.AI_label==="y"?" [AI]":""}${p.boosted_by_personal_repost==="y"?" [RP]":""}`, String(p.topic||"").slice(0,18)]);
-  const ds = MET.filter(([m]) => ps.some(p => p._vs_avg[m]!=null)).map(([m,col]) => ({label: m+" ×avg", data: ps.map(p => p._vs_avg[m]), backgroundColor: col}));
-  if (typeof Chart === "undefined") { document.getElementById(id).parentElement.innerHTML = '<div class="empty">Chart.js 未加载 (offline?)</div>'; return; }
-  new Chart(document.getElementById(id), {type:"bar", data:{labels, datasets:ds}, options:{responsive:true, maintainAspectRatio:false,
-    plugins:{legend:{position:"bottom"}, tooltip:{callbacks:{afterLabel: c => { const p=ps[c.dataIndex], m=c.dataset.label.split(" ")[0]; return `raw: ${p[m]}`; }}}},
-    scales:{y:{beginAtZero:true, title:{display:true,text:"× account avg (1.0 = 平均)"}}}}});
-});
-if (!Object.keys(D.account_avgs).length) $("#postCharts").innerHTML = '<div class="empty">还没有 Post_Log 数据</div>';
+/* ---------- Overview ---------- */
+(function renderOverview() {
+  if (IGc) {
+    const f = v => v ?? "—";
+    $("acctSub").textContent = `${IGc.account_handle} · 过去 30 天，截至 ${IGc.insights_as_of}（IG 专业账号 Insights）`;
+    const k = [["浏览 Views", f(IGc.views_30d), `${f(IGc.views_from_nonfollowers_pct)}% 来自非粉丝`, "帖子被看到的总次数"],
+               ["触达人数 Viewers", f(IGc.viewers_30d), "看过的不同账号", "看过内容的独立账号数"],
+               ["互动 Interactions", f(IGc.interactions_30d), `${f(IGc.accounts_engaged_30d)} 个账号互动`, "赞 + 评论 + 分享 + 收藏"],
+               ["主页访问 Profile visits", f(IGc.profile_visits_30d), "点进主页的次数", "有人点进 @canto.go 主页"],
+               ["粉丝 Followers", f(IGc.total_followers), `30 天 +${f(IGc.followers_gained_30d)} · 关注 ${f(IGc.following)}`, "当前粉丝总数"]];
+    $("acctKpis").innerHTML = k.map(x => `<div class="kpi"><div class="t">${x[0]}${tip(x[3])}</div><div class="n">${esc(x[1])}</div><div class="d">${esc(x[2])}</div></div>`).join("");
+  } else $("acctKpis").innerHTML = '<div class="empty">Channel_Status 里还没有账号 Insights。</div>';
+  const n = s => E.filter(e => String(e.status).toLowerCase() === s).length, dn = d => E.filter(e => String(e.decision).toLowerCase() === d).length;
+  const tot = E.length || 1, done = n("done"), run = n("running"), plan = n("planned");
+  const live = C.filter(c => phaseKind(c.current_phase) === "live"), warm = C.filter(c => phaseKind(c.current_phase) === "warm");
+  $("progress").innerHTML = `<div class="prog" role="img" aria-label="${done} 完成, ${run} 进行中, ${plan} 计划中"><span style="width:${done / tot * 100}%;background:#16a34a"></span><span style="width:${run / tot * 100}%;background:#2563eb"></span><span style="width:${plan / tot * 100}%;background:#cbd5e1"></span></div>
+    <div class="keyrow"><span><i style="background:#16a34a"></i>已完成 Done <b>${done}</b></span><span><i style="background:#2563eb"></i>进行中 Running <b>${run}</b></span><span><i style="background:#cbd5e1"></i>计划中 Planned <b>${plan}</b></span><span class="muted">共 ${E.length} 个实验</span></div>
+    <div class="tags" style="margin-top:6px">${decB("keep")} <b>${dn("keep")}</b>　${decB("iterate")} <b>${dn("iterate")}</b>　${decB("kill")} <b>${dn("kill")}</b></div>
+    <p class="small" style="margin:10px 0 0">渠道：<b>${live.length}</b> 个进行中（${esc(live.map(c => c.channel).join("、") || "—")}）· <b>${warm.length}</b> 个预热中（${esc(warm.map(c => c.channel).join("、") || "—")}）· 已记录 <b>${latestPosts.length}</b> 条帖子</p>`;
+})();
 
-// Learnings feed
-const L = E.filter(e => e.learning).sort((a,b) => String(b.date_end||b.date_start).localeCompare(String(a.date_end||a.date_start)) || String(b.exp_id).localeCompare(String(a.exp_id)));
-$("#learnFeed").innerHTML = L.map(e => `<div class="it"><div class="dt">${esc(e.date_end||e.date_start)} · ${esc(e.exp_id)} · ${esc(e.channel)} ${badge(e.decision)}</div>
-  <div><b>${esc(e.variable_tested)}</b></div><div>${esc(e.learning)}</div><div class="small muted">${esc(e.result_numbers)}</div></div>`).join("") || '<div class="empty">还没有 learnings</div>';
+/* ---------- Channels ---------- */
+(function renderBoard() {
+  const ORDER = ["IG", "TikTok", "YT Shorts", "FB Groups", "Reddit", "UGC", "Influencer", "Ads"];
+  const chans = [...C].sort((a, b) => (ORDER.indexOf(a.channel) + 99) % 99 - (ORDER.indexOf(b.channel) + 99) % 99);
+  UI.list({el: "board", items: chans, page: 8, render: c => {
+    const k = phaseKind(c.current_phase), ex = E.filter(e => e.channel === c.channel), ph = PH[k];
+    const tasks = c.daily_warmup_tasks_10min && c.daily_warmup_tasks_10min !== "—" ? c.daily_warmup_tasks_10min : "";
+    return `<article class="card${k === "live" ? " hl" : ""}">
+      <div class="top"><h3>${esc(c.channel)}</h3>${badge(ph[0], ph[1])}</div>
+      <div class="small muted">${esc(c.account_handle || "—")}${c.warmup_start_date ? " · 开始于 " + esc(c.warmup_start_date) : ""}${tcBadge(c.notes)}</div>
+      <div class="small">${ex.length} 个实验 · ${ex.filter(e => e.status === "done").length} 个已完成</div>
+      <div class="callout"><b>下一步：</b>${esc(c.next_test || "—")}</div>
+      ${tasks ? `<details class="ev"><summary>每天 10 分钟任务 Daily tasks</summary><p class="small" style="margin:6px 0 0">${esc(tasks)}</p></details>` : ""}
+    </article>`; }});
+})();
 
-// Recommended
-$("#recList").innerHTML = (D.recommended||[]).map((i,n) => `<div class="rec"><div class="rk">${n+1}</div><div style="flex:1">
-  <div><b>${esc(i.idea)}</b> ${badge(i.priority)} <span class="badge b-off">effort ${esc(i.effort)}</span> ${i.linked_exp?`<span class="small muted">↔ ${esc(i.linked_exp)}</span>`:""}</div>
-  <div class="small muted">${esc(i.channel)} · source: ${esc(i.source)} · signal: ${esc(i.expected_signal)}${i.notes?" · "+esc(i.notes):""}</div></div></div>`).join("") || '<div class="empty">Backlog 为空</div>';
+/* ---------- Experiments ---------- */
+const st = {s: ""};
+const staRank = {running: 0, done: 1, planned: 2};
+const expRows = () => { const ch = $("fCh").value, q = $("fQ").value.trim().toLowerCase();
+  return E.filter(e => (!st.s || e.status === st.s) && (!ch || e.channel === ch) && (!q || Object.values(e).join(" ").toLowerCase().includes(q)))
+    .sort((a, b) => ((staRank[a.status] ?? 3) - (staRank[b.status] ?? 3)) || (a.status === "done" ? String(b.date_start).localeCompare(String(a.date_start)) : (/^\d/.test(a.date_start) ? 0 : 1) - (/^\d/.test(b.date_start) ? 0 : 1) || String(a.date_start).localeCompare(String(b.date_start))) || String(a.exp_id).localeCompare(String(b.exp_id))); };
+[...new Set(E.map(e => e.channel).filter(Boolean))].forEach(v => $("fCh").insertAdjacentHTML("beforeend", `<option>${esc(v)}</option>`));
+const expUI = UI.list({el: "expCards", items: expRows, page: 6, count: n => $("fCount").textContent = `${n} / ${E.length} 个`, empty: "没有符合条件的实验 No match.",
+  render: e => `<article class="card${e.status === "done" ? " hl" : ""}">
+    <div class="top"><div class="small muted"><b style="color:var(--text)">${esc(e.exp_id)}</b> · ${esc(e.channel)} · ${esc(e.account || "")}</div><div class="tags">${staB(e.status)}${e.status === "done" ? decB(e.decision) : ""}</div></div>
+    <h3 style="font-size:18px">${esc(e.variable_tested)}</h3>
+    <dl class="kv"><dt>时间</dt><dd>${esc(e.date_start)}${e.date_end ? " → " + esc(e.date_end) : ""}</dd><dt>形式</dt><dd>${esc(e.format || "—")} · ${esc(e.phase || "")}</dd><dt>假设</dt><dd>${esc(e.hypothesis || "—")}</dd>${e.metrics_to_watch ? `<dt>看什么</dt><dd>${esc(e.metrics_to_watch)}</dd>` : ""}</dl>
+    ${e.learning ? `<div class="callout"><b>结论：</b>${esc(e.learning)}</div>` : ""}
+    ${e.result_numbers || e.notes ? `<details class="ev"><summary>详情 Details${tcBadge(e.notes)}</summary>${e.result_numbers ? `<p class="small" style="margin:8px 0 4px"><b>数据：</b>${esc(e.result_numbers)}</p>` : ""}${e.notes ? `<p class="small" style="margin:4px 0">${esc(e.notes)}</p>` : ""}${e.post_urls ? `<a class="small" target="_blank" rel="noopener" href="${esc(e.post_urls)}">打开帖子 Open post ↗</a>` : ""}</details>` : ""}
+  </article>`});
+const expTable = UI.table({el: "expTable", page: 20, rows: expRows, sort: {k: "exp_id", d: 1}, cols: [
+  {k: "exp_id", label: "ID", render: e => `<b>${esc(e.exp_id)}</b>`},
+  {k: "date_start", label: "开始", render: e => `<span class="nowrap">${esc(e.date_start)}</span>`},
+  {k: "channel", label: "渠道"},
+  {k: "variable_tested", label: "测试内容", render: e => esc(snip(e.variable_tested, 90))},
+  {k: "status", label: "状态", render: e => staB(e.status)},
+  {k: "decision", label: "决定", render: e => decB(e.decision)},
+  {k: "learning", label: "结论", sort: false, render: e => `<span class="small">${esc(snip(e.learning || "—", 120))}</span>`}]});
+$("stSeg").addEventListener("click", ev => { const b = ev.target.closest("button"); if (!b) return; st.s = b.dataset.s; $("stSeg").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); expUI.draw(true); expTable.draw(); });
+["fCh", "fQ"].forEach(id => $(id).addEventListener("input", () => { expUI.draw(true); expTable.draw(); }));
+
+/* ---------- Posts: one chart + cards ---------- */
+(function renderPosts() {
+  const accts = Object.keys(AVG);
+  if (!accts.length) { $("postWrap").innerHTML = '<div class="empty">还没有 Post_Log 数据。</div>'; return; }
+  accts.forEach((acct, idx) => {
+    const info = AVG[acct], ps = latestPosts.filter(p => p._account_key === acct), a = info.avg || {};
+    const best = ps.filter(p => p.views != null).sort((x, y) => y.views - x.views)[0];
+    const id = "pc" + idx;
+    $("postWrap").insertAdjacentHTML("beforeend", `<div class="panel" style="margin-bottom:16px">
+      <h3>${esc(acct)}：每个帖子的浏览和触达 <span class="muted small">Views &amp; viewers per post</span></h3>
+      <div class="keyrow"><span><i style="background:#0f766e"></i>浏览 Views</span><span><i style="background:#7dd3c8"></i>触达人数 Viewers</span><span><i style="background:transparent;border-top:3px dashed #b45309;height:0;border-radius:0"></i>账号平均浏览 avg views（${a.views != null ? a.views.toFixed(0) : "—"}）</span></div>
+      <div class="chartbox" style="height:320px"><canvas id="${id}" aria-label="每个帖子的浏览和触达 bar chart"></canvas></div>
+      <p class="small muted" style="margin:8px 0 0">${info.n_posts} 个帖子 · 账号平均：浏览 ${fmtN(a.views)} · 触达 ${fmtN(a.reach)} · 赞 ${fmtN(a.likes)} · 收藏 ${fmtN(a.saves)} · 主页访问 ${fmtN(a.profile_visits)}</p></div>
+      <div class="cards" id="${id}c"></div>`);
+    const vs = (p, m) => p._vs_avg && p._vs_avg[m] != null ? `<span class="${vsCls(p._vs_avg[m])}">${esc(vsTxt(p._vs_avg[m], "平均"))}</span>` : `<span class="muted">—</span>`;
+    $(id + "c").innerHTML = ps.slice().reverse().map(p => `<article class="card${p === best ? " hl" : ""}">
+      <div class="top"><h3 style="font-size:17px">${p.url ? `<a target="_blank" rel="noopener" href="${esc(p.url)}">${esc(shortTopic(p.topic))}</a>` : esc(shortTopic(p.topic))}</h3>${p === best ? badge("★ 浏览最多", "b-good") : ""}</div>
+      <div class="small muted">${esc(p.date)} · ${esc(p.format)} · ${esc(p.exp_id || "")} · 数据截至 ${esc(p.check_date)}${tcBadge(p.notes)}</div>
+      <div class="tags">${p.AI_label === "y" ? badge("AI 标签", "b-violet") : badge("无 AI 标签", "b-neutral")}${p.boosted_by_personal_repost === "y" ? badge("个人号转发", "b-blue") : ""}</div>
+      <div class="stats">
+        <div><div class="v">${p.views ?? "—"}</div><div class="k">浏览 views<br>${vs(p, "views")}</div></div>
+        <div><div class="v">${p.reach ?? "—"}</div><div class="k">触达 viewers<br>${vs(p, "reach")}</div></div>
+        <div><div class="v">${p.saves ?? "—"}</div><div class="k">收藏 saves<br>${vs(p, "saves")}</div></div>
+      </div>
+      <div class="small">赞 ${p.likes ?? "—"} · 评论 ${p.comments ?? "—"} · 分享 ${p.shares ?? "—"} · 主页访问 ${p.profile_visits ?? "—"}（${vs(p, "profile_visits")}）</div>
+    </article>`).join("");
+    if (typeof Chart === "undefined") { $(id).parentElement.innerHTML = '<div class="empty">图表没加载（离线？）数据见下方卡片。</div>'; return; }
+    new Chart($(id), {data: {labels: ps.map(p => [shortTopic(p.topic).slice(0, 24), `${mmdd(p.date)}${p.boosted_by_personal_repost === "y" ? " · 转发" : ""}${p.AI_label === "y" ? " · AI" : ""}`]),
+      datasets: [{type: "bar", label: "浏览 Views", data: ps.map(p => p.views), backgroundColor: "#0f766e", borderRadius: 4, maxBarThickness: 56},
+                 {type: "bar", label: "触达 Viewers", data: ps.map(p => p.reach), backgroundColor: "#7dd3c8", borderRadius: 4, maxBarThickness: 56},
+                 {type: "line", label: "账号平均浏览 Avg views", data: ps.map(() => a.views != null ? Math.round(a.views) : null), borderColor: "#b45309", borderDash: [6, 5], borderWidth: 2, pointRadius: 0}]},
+      options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: {bodyFont: {size: 14}, titleFont: {size: 14},
+        callbacks: {afterBody: items => { const p = ps[items[0].dataIndex]; return `浏览 ${vsTxt(p._vs_avg.views, "账号平均")}`; }}}},
+        scales: {y: {beginAtZero: true, title: {display: true, text: "次数 / 人数 count", color: "#374151", font: {size: 14}}, ticks: {color: "#374151", font: {size: 13}}, grid: {color: "#eef1f4"}},
+                 x: {ticks: {color: "#111827", font: {size: 13}}, grid: {display: false}}}}});
+  });
+})();
+
+/* ---------- Learnings ---------- */
+UI.list({el: "learnFeed", items: doneE, page: 5, cls: "tline", empty: "还没有结论 No learnings yet.", render: e => `<div class="it ${(DEC[String(e.decision).toLowerCase()] || [])[2] || ""}">
+  <div class="dt">${esc(e.date_end || e.date_start)} · <b>${esc(e.exp_id)}</b> · ${esc(e.channel)} ${decB(e.decision)}</div>
+  <h3 style="font-size:18px;margin:4px 0">${esc(e.variable_tested)}</h3>
+  <div>${esc(e.learning)}</div>
+  ${e.result_numbers ? `<details class="ev" style="border:0;padding-top:4px"><summary>原始数据 Raw numbers</summary><p class="small muted" style="margin:6px 0 0">${esc(e.result_numbers)}</p></details>` : ""}</div>`});
+
+/* ---------- Recommended ---------- */
+const PRI = {P1: ["P1 优先", "b-good"], P2: ["P2", "b-warn"], P3: ["P3", "b-neutral"]}, EFF = {S: "小 S", M: "中 M", L: "大 L"};
+UI.list({el: "recList", items: D.recommended || [], page: 5, cls: "recs", empty: "Backlog 为空。", render: (i) => { const n = (D.recommended || []).indexOf(i) + 1, pr = PRI[i.priority] || [i.priority, "b-neutral"];
+  return `<div class="rec"><div class="rk">${n}</div><div style="flex:1;min-width:0">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:17px">${esc(i.idea)}</b></div>
+    <div class="tags" style="margin:6px 0">${badge(pr[0], pr[1])}${badge("工作量 " + (EFF[i.effort] || i.effort || "—"), "b-neutral")}${badge(i.channel, "b-blue")}${i.status ? badge(i.status === "ready" ? "可以开始 ready" : i.status, i.status === "ready" ? "b-good" : "b-neutral") : ""}</div>
+    <div class="small"><span class="muted">看什么：</span>${esc(i.expected_signal || "—")}${i.linked_exp ? ` · <span class="muted">相关实验：</span>${esc(i.linked_exp)}` : ""}${i.notes ? ` · ${esc(i.notes)}` : ""}</div>
+    <div class="small muted">来源：${esc(i.source || "—")} · ${esc(i.idea_id)}</div></div></div>`; }});
+
+UI.initNav();
+})();
 </script>
 </body>
 </html>

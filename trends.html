@@ -20,7 +20,9 @@
   --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Noto Sans SC","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:76px;-webkit-text-size-adjust:100%}
+html{scroll-padding-top:var(--navh,60px);  /* --navh = live sticky-nav height, set by UI.initNav; section padding-top gives the gap */
+  -webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--font)}
 a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(15,118,110,.35)}
 a:hover{text-decoration-color:currentColor}
@@ -102,6 +104,11 @@ h3{font-size:19px;line-height:1.35;margin:0}
 /* tooltip: hover or tap/focus */
 .tip{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--bg3);color:var(--text2);font-size:13px;font-weight:800;cursor:help;position:relative;vertical-align:1px;font-style:normal;margin-left:3px}
 .tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:50%;top:26px;transform:translateX(-50%);width:max-content;max-width:280px;background:var(--text);color:#fff;font-size:14px;font-weight:500;line-height:1.5;padding:9px 12px;border-radius:8px;z-index:30;white-space:normal;text-align:left}
+.tip.tip-l::after{left:-6px;transform:none}   /* set by UI JS when the tip is near the left/right edge */
+.tip.tip-r::after{left:auto;right:-6px;transform:none}
+@media (max-width:640px){  /* phones: tooltip becomes a bottom sheet inside the viewport, never widens the page */
+  .tip:hover::after,.tip:focus::after{position:fixed;left:16px;right:16px;top:auto;bottom:16px;transform:none;width:auto;max-width:none;z-index:40;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+}
 .legend{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:15px;color:var(--text2);margin:0 0 18px}
 .legend summary{font-weight:700;color:var(--text);cursor:pointer}
 .legend ul{margin:8px 0 0;padding-left:20px}
@@ -142,7 +149,9 @@ table.t{width:100%;border-collapse:collapse;font-size:15px}
 /* chart */
 .panel{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:18px 20px;box-shadow:var(--shadow)}
 .panel h3{margin-bottom:4px}
-.chartbox{position:relative;width:100%}
+.chartbox{position:relative;width:100%;height:320px;overflow:hidden}  /* Chart.js responsive+maintainAspectRatio:false needs a fixed-height parent, else it grows forever */
+.chartbox>canvas{display:block}
+.chartbox:has(>.empty){height:auto}
 .keyrow{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--text2);margin:6px 0 10px}
 .keyrow i{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:-2px}
 /* lists: horizontal bars without a chart lib */
@@ -365,14 +374,56 @@ const UI = (() => {
     el.textContent = ago(d) + (h > 36 ? " · 数据可能过期 may be stale" : "");
     if (h > 36) el.classList.add("stale");
   }
-  /* sticky tabs: highlight the section in view */
+  /* sticky tabs: highlight the section in view.
+     Scroll-safe (2026-10-10 fix): never calls scrollIntoView/scrollTo on the document while the user scrolls.
+     The old IntersectionObserver version called a.scrollIntoView() on every section change; with
+     html{scroll-behavior:smooth} that started a programmatic root scroll which cancelled wheel/touch
+     momentum and pulled the page back (stuck + jumping). Now: passive scroll listener, rAF-throttled,
+     only toggles classes and scrolls the .tabs strip itself (horizontal, its own scroller). */
   function initNav() {
-    const links = [...document.querySelectorAll(".tabs a")];
-    const map = new Map(links.map(a => [a.getAttribute("href").slice(1), a]));
-    const io = new IntersectionObserver(es => {
-      es.forEach(e => { if (e.isIntersecting) { links.forEach(a => a.classList.remove("on")); const a = map.get(e.target.id); if (a) { a.classList.add("on"); a.scrollIntoView({block:"nearest", inline:"nearest"}); } } });
-    }, {rootMargin: "-80px 0px -65% 0px"});
-    map.forEach((a, id) => { const s = document.getElementById(id); if (s) io.observe(s); else a.remove(); });
+    const nav = document.querySelector(".nav"), tabs = document.querySelector(".tabs");
+    if (!nav || !tabs) return;
+    const links = [...tabs.querySelectorAll("a")];
+    const secs = [];
+    links.forEach(a => { const s = document.getElementById(a.getAttribute("href").slice(1)); if (s) secs.push([s, a]); else a.remove(); });
+    const root = document.documentElement;
+    const setNavH = () => root.style.setProperty("--navh", Math.round(nav.getBoundingClientRect().height) + "px");
+    setNavH();
+    if (window.ResizeObserver) new ResizeObserver(setNavH).observe(nav); else addEventListener("resize", setNavH);
+    let cur = null, ticking = false, pinned = null;
+    function activate(a) {
+      if (a === cur) return;
+      if (cur) cur.classList.remove("on");
+      cur = a; if (!a) return;
+      a.classList.add("on");
+      // keep the active pill visible inside the horizontal strip only (never touches window scroll)
+      const l = a.offsetLeft - tabs.offsetLeft, r = l + a.offsetWidth;
+      if (l < tabs.scrollLeft || r > tabs.scrollLeft + tabs.clientWidth)
+        tabs.scrollTo({left: Math.max(0, l - 16), behavior: "auto"});
+    }
+    function update() {
+      ticking = false;
+      const line = nav.getBoundingClientRect().bottom + 24;
+      let a = secs.length ? secs[0][1] : null;
+      for (const [s, l] of secs) { if (s.getBoundingClientRect().top <= line) a = l; else break; }
+      if (pinned) a = pinned;   // a tab jump is in progress or landed: keep the clicked tab until the user scrolls by hand
+      else if (secs.length && innerHeight + scrollY >= root.scrollHeight - 2) {   // at the very bottom: last visible section
+        for (const [s, l] of secs) if (s.getBoundingClientRect().top < innerHeight) a = l;
+      }
+      activate(a);
+    }
+    tabs.addEventListener("click", e => { const a = e.target.closest("a"); if (a) { pinned = a; activate(a); } });
+    ["wheel", "touchstart", "keydown"].forEach(t => addEventListener(t, () => { pinned = null; }, {passive: true}));
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    addEventListener("scroll", onScroll, {passive: true});
+    addEventListener("resize", onScroll, {passive: true});
+    update();
+  }
+  /* after "Show less" the list shrinks; if its top is now above the viewport, bring it back under the sticky nav (instant, one-shot) */
+  function keepInView(el) {
+    const navh = (document.querySelector(".nav") || {offsetHeight: 0}).offsetHeight;
+    const top = el.getBoundingClientRect().top;
+    if (top < navh) window.scrollTo({top: Math.max(0, scrollY + top - navh - 12), behavior: "instant"});
   }
   /* sortable + searchable + paged table; stacks into cards on phones */
   function table(o) {
@@ -394,7 +445,7 @@ const UI = (() => {
       tb.innerHTML = r.slice(0, st.shown).map(x => `<tr>${o.cols.map(c => `<td data-label="${esc(c.label)}"${c.num ? ' class="num"' : ""}>${c.render ? c.render(x) : esc(x[c.k])}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${o.cols.length}" class="muted">${esc(o.empty || "没有结果 No match")}</td></tr>`;
       const left = r.length - st.shown;
       more.innerHTML = left > 0 ? `<button class="btn" type="button">显示更多 Show ${Math.min(left, o.page || 20)} more <span class="muted">（还有 ${left} 条 / ${r.length}）</span></button>` + (left > (o.page||20) ? ` <button class="btn" type="button" data-all="1">全部显示 Show all</button>` : "") : (r.length > (o.page || 20) ? `<button class="btn" type="button" data-less="1">收起 Show less</button>` : "");
-      more.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.less) { st.shown = o.page || 20; el.scrollIntoView({block:"start"}); } else st.shown = b.dataset.all ? 1e9 : st.shown + (o.page || 20); draw(); });
+      more.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.less) { st.shown = o.page || 20; draw(); keepInView(el); } else { st.shown = b.dataset.all ? 1e9 : st.shown + (o.page || 20); draw(); } });
       if (o.count) o.count(r.length);
     }
     draw();
@@ -413,7 +464,7 @@ const UI = (() => {
       if (left > 0 || items.length > pg) {
         const m = document.createElement("div"); m.className = "more";
         m.innerHTML = left > 0 ? `<button class="btn" type="button" data-n="1">显示更多 Show ${Math.min(left, pg * 2)} more <span class="muted">（还有 ${left} 个 / ${items.length}）</span></button>` + (left > pg * 2 ? ` <button class="btn" type="button" data-all="1">全部显示 Show all</button>` : "") : `<button class="btn" type="button" data-less="1">收起 Show less</button>`;
-        m.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.less) { shown = pg; el.scrollIntoView({block:"start"}); } else shown = b.dataset.all ? items.length : shown + pg * 2; draw(); });
+        m.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.less) { shown = pg; draw(); keepInView(el); } else { shown = b.dataset.all ? items.length : shown + pg * 2; draw(); } });
         el.appendChild(m);
       }
       if (o.count) o.count(items.length);
@@ -421,6 +472,16 @@ const UI = (() => {
     draw();
     return { draw };
   }
+  /* tooltips: anchor to the left/right when centring would push the bubble off-screen (desktop; phones use a bottom sheet in CSS) */
+  function placeTip(e) {
+    const t = e.target && e.target.closest && e.target.closest(".tip"); if (!t) return;
+    t.classList.remove("tip-l", "tip-r");
+    const r = t.getBoundingClientRect(), W = document.documentElement.clientWidth, half = 150;
+    if (r.left + r.width / 2 - half < 8) t.classList.add("tip-l");
+    else if (r.left + r.width / 2 + half > W - 8) t.classList.add("tip-r");
+  }
+  document.addEventListener("pointerover", placeTip, {passive: true});
+  document.addEventListener("focusin", placeTip);
   return { esc, fmtN, snip, tip, vsTxt, vsCls, sigBadge, badge, ago, freshness, initNav, table, list };
 })();
 

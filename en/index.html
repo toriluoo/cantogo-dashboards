@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<meta name="cg-published" content="2026-10-11T08:32:52-07:00">
+<meta name="cg-page" content="index">
+<title>CantoGo Dashboards</title>
+<style>
+/* CantoGo shared UI v2 — same block is inlined in both dashboards (trends + distribution) */
+:root{
+  --bg:#ffffff; --bg2:#f6f7f9; --bg3:#eef1f4; --line:#e2e6eb; --line2:#cfd5dc;
+  --text:#111827; --text2:#374151; --muted:#4b5563;            /* muted = 7.6:1 on white */
+  --accent:#0f766e; --accent-ink:#115e59; --accent-soft:#e7f5f3;  /* 5.5:1 */
+  --hi:#166534; --hi-bg:#dcfce7; --hi-line:#86efac;
+  --md:#92400e; --md-bg:#fef3c7; --md-line:#fcd34d;
+  --lo:#374151; --lo-bg:#eef1f4; --lo-line:#cfd5dc;
+  --red:#b42318; --red-bg:#fdecea; --blue:#1e40af; --blue-bg:#e0e7ff; --violet:#5b21b6; --violet-bg:#ede9fe;
+  --r:14px; --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.04);
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Noto Sans SC","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:var(--navh,60px);  /* --navh = live sticky-nav height, set by UI.initNav; section padding-top gives the gap */
+  -webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--font)}
+a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(15,118,110,.35)}
+a:hover{text-decoration-color:currentColor}
+:focus-visible{outline:3px solid #5eead4;outline-offset:2px;border-radius:6px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+/* header */
+.hdr{padding:28px 0 18px}
+.hdr .row{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-start;justify-content:space-between}
+.hdr .kicker{font-size:15px;color:var(--muted);font-weight:600}
+.hdr h1{margin:2px 0 4px;font-size:30px;line-height:1.25;letter-spacing:-.01em}
+.hdr h1 small{font-size:20px;color:var(--muted);font-weight:600;margin-left:6px}
+.hdr p.lead{margin:0;color:var(--text2);max-width:640px}
+.updated{background:var(--accent-soft);border:1px solid #b7e1db;border-radius:var(--r);padding:12px 16px;min-width:260px}
+.updated .l{font-size:14px;color:var(--accent-ink);font-weight:700}
+.updated .v{font-size:22px;font-weight:800;line-height:1.3;color:var(--text)}
+.updated .s{font-size:14px;color:var(--muted)}
+.updated .s.stale{color:var(--red);font-weight:700}
+.hdr .links{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:15px}
+/* sticky nav */
+.nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.97);backdrop-filter:saturate(1.4) blur(6px);border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:12px}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;padding:8px 0}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{flex:none;text-decoration:none;color:var(--text2);font-size:15px;font-weight:600;padding:8px 14px;border-radius:999px;white-space:nowrap}
+.tabs a:hover{background:var(--bg2)}
+.tabs a.on{background:var(--text);color:#fff}
+.nav input[type=search]{width:260px;flex:none}
+/* sections */
+main{padding-bottom:72px}
+section.sec{padding-top:44px}
+.sec>h2{font-size:24px;line-height:1.3;margin:0 0 6px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec>h2 .en{font-size:17px;color:var(--muted);font-weight:600}
+.sec>.sub{color:var(--text2);margin:0 0 18px;max-width:760px}
+h3{font-size:19px;line-height:1.35;margin:0}
+.muted{color:var(--muted)} .small{font-size:14px} .nowrap{white-space:nowrap}
+/* today */
+.today{border:2px solid var(--accent);border-radius:18px;padding:22px 24px;background:linear-gradient(180deg,#f0faf8 0,#fff 120px)}
+.today>h2{margin:0 0 4px;font-size:26px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.today>h2 .en{font-size:18px;color:var(--muted);font-weight:600}
+.today ol{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:12px}
+.today li{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.today .num{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:17px}
+.lab{font-size:14px;font-weight:700;color:var(--accent-ink);letter-spacing:.02em}
+.today .tx{font-size:17px;line-height:1.6;color:var(--text)}
+.today .tx b{font-weight:800}
+.today .go{font-size:14px;margin-left:6px;white-space:nowrap}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.kpi{border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;background:#fff;box-shadow:var(--shadow)}
+.kpi .t{font-size:15px;color:var(--text2);font-weight:700}
+.kpi .n{font-size:34px;font-weight:800;line-height:1.2;margin:4px 0 2px;letter-spacing:-.02em}
+.kpi .d{font-size:14px;color:var(--muted)}
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.card{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:18px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;min-width:0}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.card .top h3 .en{display:block;font-size:15px;color:var(--muted);font-weight:600}
+.card .why{color:var(--text2)}
+.card.hl{border-left:5px solid var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;background:var(--bg2);border-radius:10px;padding:12px}
+.stats .v{font-size:20px;font-weight:800;line-height:1.25}
+.stats .k{font-size:14px;color:var(--muted);line-height:1.35}
+.big{font-size:20px;font-weight:800}
+.up{color:var(--hi)} .down{color:var(--red)}
+/* badges: color + text + icon, never color alone */
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 11px;font-size:14px;font-weight:700;white-space:nowrap;border:1px solid transparent;line-height:1.45}
+.sig-High{background:var(--hi-bg);color:var(--hi);border-color:var(--hi-line)}
+.sig-Medium{background:var(--md-bg);color:var(--md);border-color:var(--md-line)}
+.sig-Low{background:var(--lo-bg);color:var(--lo);border-color:var(--lo-line)}
+.bars{font-size:12px;letter-spacing:-1px}
+.b-good{background:var(--hi-bg);color:var(--hi);border-color:var(--hi-line)}
+.b-warn{background:var(--md-bg);color:var(--md);border-color:var(--md-line)}
+.b-bad{background:var(--red-bg);color:var(--red);border-color:#f5b5ae}
+.b-neutral{background:var(--lo-bg);color:var(--lo);border-color:var(--lo-line)}
+.b-blue{background:var(--blue-bg);color:var(--blue);border-color:#c7d2fe}
+.b-violet{background:var(--violet-bg);color:var(--violet);border-color:#ddd6fe}
+.b-new{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+/* tooltip: hover or tap/focus */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--bg3);color:var(--text2);font-size:13px;font-weight:800;cursor:help;position:relative;vertical-align:1px;font-style:normal;margin-left:3px}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:50%;top:26px;transform:translateX(-50%);width:max-content;max-width:280px;background:var(--text);color:#fff;font-size:14px;font-weight:500;line-height:1.5;padding:9px 12px;border-radius:8px;z-index:30;white-space:normal;text-align:left}
+.tip.tip-l::after{left:-6px;transform:none}   /* set by UI JS when the tip is near the left/right edge */
+.tip.tip-r::after{left:auto;right:-6px;transform:none}
+@media (max-width:640px){  /* phones: tooltip becomes a bottom sheet inside the viewport, never widens the page */
+  .tip:hover::after,.tip:focus::after{position:fixed;left:16px;right:16px;top:auto;bottom:16px;transform:none;width:auto;max-width:none;z-index:40;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+}
+.legend{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:15px;color:var(--text2);margin:0 0 18px}
+.legend summary{font-weight:700;color:var(--text);cursor:pointer}
+.legend ul{margin:8px 0 0;padding-left:20px}
+.legend li{margin:3px 0}
+/* toolbar + inputs */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 16px}
+input[type=search],select{max-width:100%;font:inherit;font-size:16px;border:1px solid var(--line2);border-radius:10px;padding:9px 12px;background:#fff;color:var(--text);min-height:44px}
+input[type=search]{min-width:220px;flex:1}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.seg button{font:inherit;font-size:15px;font-weight:600;border:0;background:#fff;color:var(--text2);padding:9px 14px;cursor:pointer;min-height:44px;border-right:1px solid var(--line2)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--text);color:#fff}
+label.chk{display:inline-flex;gap:8px;align-items:center;font-size:15px;color:var(--text2);cursor:pointer;min-height:44px}
+label.chk input{width:18px;height:18px}
+.count{font-size:15px;color:var(--muted)}
+.btn{font:inherit;font-size:15px;font-weight:700;border:1px solid var(--line2);background:#fff;color:var(--text);border-radius:10px;padding:10px 18px;cursor:pointer;min-height:44px}
+.btn:hover{border-color:var(--accent);color:var(--accent-ink)}
+.more{display:flex;justify-content:center;margin-top:16px}
+/* details */
+details.ev{border-top:1px solid var(--line);padding-top:10px}
+details.ev summary,details.fold summary{cursor:pointer;font-weight:700;color:var(--accent-ink);font-size:15px;min-height:32px;list-style-position:inside}
+details.fold{border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;background:#fff;margin-top:16px}
+.evl{list-style:none;margin:10px 0 0;padding:0}
+.evl li{padding:10px 0;border-bottom:1px solid var(--bg3);font-size:15px}
+.evl li:last-child{border-bottom:0}
+.evl .meta{font-size:14px;color:var(--muted)}
+.evl h4{margin:12px 0 2px;font-size:14px;color:var(--text2)}
+/* tables */
+.tw{border:1px solid var(--line);border-radius:var(--r);overflow:auto;background:#fff}
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+.t th,.t td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.t th{background:var(--bg2);font-weight:700;color:var(--text2);font-size:14px;white-space:nowrap;position:sticky;top:0;z-index:1}
+.t th[data-k]{cursor:pointer;user-select:none}
+.t th[data-k]::after{content:" ↕";color:#9ca3af}
+.t th.asc::after{content:" ↑";color:var(--text)} .t th.desc::after{content:" ↓";color:var(--text)}
+.t tr:hover td{background:#fafbfc}
+.t td.num{white-space:nowrap;font-variant-numeric:tabular-nums}
+/* chart */
+.panel{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:18px 20px;box-shadow:var(--shadow)}
+.panel h3{margin-bottom:4px}
+.chartbox{position:relative;width:100%;height:320px;overflow:hidden}  /* Chart.js responsive+maintainAspectRatio:false needs a fixed-height parent, else it grows forever */
+.chartbox>canvas{display:block}
+.chartbox:has(>.empty){height:auto}
+.keyrow{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--text2);margin:6px 0 10px}
+.keyrow i{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:-2px}
+/* lists: horizontal bars without a chart lib */
+.hbars{display:grid;gap:8px}
+.hbar{display:grid;grid-template-columns:minmax(150px,240px) 1fr 44px;gap:12px;align-items:center;font-size:15px}
+.hbar .track,.hbar .fill{display:block}
+.hbar .track{background:var(--bg3);border-radius:6px;height:14px;overflow:hidden}
+.hbar .fill{background:var(--accent);height:100%;border-radius:6px}
+.hbar .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+/* timeline */
+.tline{display:grid;gap:14px}
+.tline .it{border-left:4px solid var(--line2);padding:4px 0 4px 16px}
+.tline .it.good{border-left-color:var(--hi-line)} .tline .it.warn{border-left-color:var(--md-line)} .tline .it.bad{border-left-color:#f5b5ae}
+.tline .dt{font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.empty{border:1px dashed var(--line2);border-radius:var(--r);padding:18px;color:var(--text2);background:var(--bg2)}
+.note{background:var(--bg2);border-radius:10px;padding:10px 14px;color:var(--text2);font-size:15px}
+.callout{background:var(--accent-soft);border-radius:10px;padding:10px 14px;color:var(--accent-ink);font-size:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+footer.ft{border-top:1px solid var(--line);margin-top:56px;padding:18px 0 40px;color:var(--muted);font-size:14px}
+mark{background:#fef08a;color:inherit;border-radius:3px}
+/* post thumbnails (2026-10-10): fixed 4:5 frames (no layout shift); strips scroll sideways only */
+.th{flex:none;display:flex;flex-direction:column;gap:6px;width:124px;min-width:0;text-decoration:none;color:var(--text);scroll-snap-align:start}
+.th[hidden]{display:none}
+.th-f{display:block;position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:var(--bg3);border:1px solid var(--line)}
+.th-f>img{display:block;width:100%;height:100%;object-fit:cover}
+a.th:hover .th-f,a.th:focus-visible .th-f{border-color:var(--accent);box-shadow:0 0 0 2px #99e6da}
+a.th:focus-visible{outline:none}
+.th-meta{display:flex;flex-direction:column;font-size:13px;line-height:1.35;min-width:0}
+.th-h{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.th-p{font-weight:700;color:var(--text2)} .th-p.up{color:var(--hi)} .th-p.down{color:var(--red)}
+.th-d{color:var(--muted)}
+.th-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;text-align:center;background:linear-gradient(160deg,#f0faf8,#eef1f4);color:var(--muted)}
+.th-ph-i{width:30px;height:30px;border-radius:50%;background:#fff;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--accent-ink)}
+.th-ph-h{font-size:12px;font-weight:700;color:var(--text2);overflow-wrap:anywhere;max-width:100%;line-height:1.3}
+.th-ph-n{font-size:11px}
+.thstrip{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding-inline:2px;padding:2px 2px 10px;max-width:100%;min-width:0;scrollbar-width:thin}
+.th-more{flex:none;width:92px;aspect-ratio:4/5;align-self:flex-start;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px dashed var(--line2);border-radius:10px;background:#fff;color:var(--accent-ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer;line-height:1.35;padding:6px}
+.th-more:hover{border-color:var(--accent)} .th-more b{font-size:20px;line-height:1.2} .th-more .e{color:var(--muted);font-weight:600;font-size:12px}
+.th-s{width:56px;gap:0} .th-s .th-f{border-radius:8px}
+.th-s .th-ph{padding:3px} .th-s .th-ph-i,.th-s .th-ph-n{display:none} .th-s .th-ph-h{font-size:9px}
+.pv{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;align-items:start}
+.pv>.th{width:100%}
+.tdpv{display:flex;gap:14px;align-items:flex-start}
+.tdpv>.th{width:76px}
+.thlab{font-size:14px;color:var(--text2);font-weight:700;margin-bottom:-2px}
+@media (max-width:640px){ .th{width:112px} .th-s{width:52px} .pv{grid-template-columns:96px minmax(0,1fr);gap:12px} .tdpv>.th{width:64px} }
+/* responsive */
+.mobile-only{display:none}
+@media (max-width:820px){
+  .grid2{grid-template-columns:1fr}
+  .nav .wrap{flex-wrap:wrap;gap:0}
+  .tabs{flex:1 1 100%;min-width:0}
+  .nav input[type=search]{width:100%;margin:0 0 8px}
+}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .hdr h1{font-size:25px} .hdr h1 small{display:block;margin:0;font-size:17px}
+  .updated{width:100%} .updated .v{font-size:19px}
+  .nav input[type=search]{display:none}
+  .mobile-only{display:block}
+  .today{padding:16px}
+  .today li{grid-template-columns:32px 1fr;padding:12px}
+  .today .num{width:28px;height:28px;font-size:15px}
+  .cards{grid-template-columns:1fr}
+  .sec>h2{font-size:22px}
+  section.sec{padding-top:36px}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{padding:12px 14px} .kpi .n{font-size:26px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hbar{grid-template-columns:1fr 40px;gap:4px 10px}
+  .hbar .lbl{grid-column:1/-1}
+  /* tables become stacked cards */
+  table.t.stack,table.t.stack tbody{display:block;width:100%}
+  table.t.stack thead{display:none}
+  table.t.stack tr{display:block;border-bottom:1px solid var(--line);padding:10px 4px}
+  table.t.stack td{display:grid;grid-template-columns:104px minmax(0,1fr);overflow-wrap:anywhere;gap:10px;border:0;padding:4px 10px}
+  table.t.stack td::before{content:attr(data-label);font-size:14px;color:var(--muted);font-weight:700}
+  .tw{overflow:visible}
+  .toolbar>*{flex:1 1 100%}
+  .seg{display:flex} .seg button{flex:1}
+}
+/* ---- freshness header, data-as-of chips, language toggle, update explainer (i18n 2026-10-11) ---- */
+.updated{min-width:290px;max-width:420px}
+.updated .fr-top{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;white-space:nowrap;margin-bottom:4px;height:28px}
+.updated .v{min-height:1.3em}
+.fbadge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 12px;font-size:14px;font-weight:800;line-height:22px;border:1px solid transparent;white-space:nowrap}
+.fbadge::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
+.fbadge.f-fresh{background:var(--hi-bg);color:var(--hi);border-color:var(--hi-line)}
+.fbadge.f-late{background:var(--md-bg);color:var(--md);border-color:var(--md-line)}
+.fbadge.f-stale{background:var(--red-bg);color:var(--red);border-color:#f5b5ae}
+.fbadge.f-unknown{background:var(--lo-bg);color:var(--lo);border-color:var(--lo-line)}
+.updated .ago{font-size:14px;color:var(--text2);min-height:23.1px;min-height:1lh}
+.updated .nx{font-size:14px;color:var(--text2);margin-top:6px;border-top:1px dashed #b7e1db;padding-top:6px;min-height:30.1px;min-height:calc(1lh + 7px)}
+.updated .nx b{color:var(--text)}
+.updated .pend{font-size:13px;color:var(--md);font-weight:700}
+.asof{display:flex;flex-wrap:wrap;gap:6px 8px;margin:4px 0 12px;min-height:26px}
+.asof .chip{display:inline-flex;align-items:baseline;gap:5px;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:2px 11px;font-size:13px;line-height:20px;color:var(--text2);max-width:100%}
+.asof .chip b{color:var(--text);font-weight:700}
+.asof .chip .n{color:var(--muted)}
+.hdr .asof{margin:10px 0 0}
+.lang{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:999px;padding:3px 12px;font-size:15px;font-weight:700;background:#fff;white-space:nowrap}
+.lang a{text-decoration:none;color:var(--accent-ink)} .lang a:hover{text-decoration:underline}
+.lang [aria-current]{color:var(--text)}
+.lang .sep{color:var(--muted);font-weight:400}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+details.howup{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:15px;color:var(--text2);margin:14px 0}
+details.howup summary{font-weight:700;color:var(--text);cursor:pointer}
+details.howup ul{margin:8px 0 0;padding-left:20px} details.howup li{margin:3px 0}
+details.howup p{margin:8px 0 0}
+footer.ft details.howup{margin:0 0 12px;font-size:14px}
+@media (max-width:640px){ .updated{max-width:none} }
+/* English pages: Latin fonts first (CJK fonts render ’ “ ” as full-width), CJK fonts kept as fallback for vocab examples */
+html[lang="en"]{--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans","DejaVu Sans","PingFang TC","PingFang SC","Hiragino Sans GB","Microsoft JhengHei","Microsoft YaHei","Noto Sans CJK TC","Noto Sans CJK SC",sans-serif}
+
+/* render gate: see the <head> script; <main> becomes visible once the page script has run */
+html.cg-pending main.wrap{visibility:hidden}
+
+.lwrap{max-width:780px;margin:0 auto;padding:40px 24px 64px}
+.lwrap h1{margin:2px 0 6px;font-size:30px;line-height:1.25} .lwrap h1 small{font-size:20px;color:var(--muted);font-weight:600;margin-left:6px}
+p.lead{margin:0 0 18px;color:var(--text2)}
+.intro{background:var(--accent-soft);border:1px solid #b7e1db;border-radius:14px;padding:14px 18px;margin:0 0 18px;color:var(--text2)}
+.intro p{margin:0 0 8px} .intro p:last-child{margin:0}
+a.card{display:block;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:16px 0;text-decoration:none;color:inherit;box-shadow:0 1px 2px rgba(16,24,40,.06);transition:border-color .15s}
+a.card:hover,a.card:focus-visible{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px #99e6da}
+a.card h2{margin:0 0 6px;font-size:22px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+a.card h2 .en{font-size:16px;color:var(--muted);font-weight:600}
+a.card p{margin:0;color:var(--text2)}
+a.card .go{display:inline-block;margin-top:12px;font-weight:700;color:var(--accent-ink)}
+.cfresh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:10px 0 0;font-size:14px;color:var(--text2);min-height:28px}
+.cfresh b{color:var(--text)}
+.pub{margin-top:20px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-size:15px;color:var(--text2)}
+.pub b{color:var(--text)}
+@media (max-width:640px){.lwrap{padding:28px 16px 48px} .lwrap h1{font-size:25px} .lwrap h1 small{display:block;margin:0;font-size:17px}}
+</style>
+</head>
+<body><div class="lwrap">
+<div class="toprow"><div class="kicker" style="font-size:15px;color:var(--muted);font-weight:600">CantoGo</div><span class="lang" data-i18n-allow aria-label="Language"><a href="../index.html" hreflang="zh-Hans" lang="zh-Hans" data-lang-link="zh">中文</a><span class="sep">/</span><span aria-current="page" lang="en">English</span></span></div>
+<h1>Dashboards</h1>
+<div class="intro"><p><b>What is this?</b> CantoGo is an app for learning Cantonese vocabulary — everyday, spoken Hong Kong Cantonese, aimed especially at heritage learners in the diaspora. These two dashboards are our research notebook: <b>Trends</b> tracks which Cantonese-teaching topics are proven to work for other Instagram creators and what learners struggle with on Reddit, and <b>Distribution Experiments</b> logs every post and channel test for our own @canto.go account. The goal is to find proven topics and the best distribution channels, then double down on what works.</p></div>
+<p class="lead">10 minutes a day: start with the “Today’s highlights” box at the top of each dashboard.</p>
+<a class="card" href="distribution.html" data-published="2026-10-11T08:32:52-07:00"><h2>Distribution Experiments</h2><p>Experiments on IG / TikTok / YouTube Shorts / Facebook Groups: post performance, what we learned, and the next tests to run.</p><div class="cfresh"></div><span class="go">Open →</span></a>
+<a class="card" href="trends.html" data-published="2026-10-11T08:32:52-07:00"><h2>Trends</h2><p>Topic signals from Cantonese-teaching Instagram creators, rising topics, Reddit learner pain points and a daily digest.</p><div class="cfresh"></div><span class="go">Open →</span></a>
+<details class="howup"><summary>How updates work</summary><ul><li><b>Updated automatically every day (weekends included)</b>: the routine starts at 8:58 AM PT and the new pages are usually live by about 9:30 AM PT.</li><li><b>What each run collects</b>: new posts from the tracked Instagram creators; @canto.go posts and Insights; new Reddit learner pain points (the Reddit archive can lag 1–3 days, so the newest threads may show up a day or two late); Victoria’s hand edits from the Google Sheets in the “CantoGo Live” Drive folder. It then rebuilds both dashboards in Chinese and English and publishes them.</li><li><b>Edits in the CantoGo Live Sheets</b> show up after the next run (normally the next morning).</li><li><b>Posts published over the weekend</b> are picked up by the next morning’s run (the routine runs on weekends too).</li><li><b>Freshness badge</b>: <span class="fbadge f-fresh">Fresh</span> published since the most recent daily run; <span class="fbadge f-late">Late</span> today’s run is more than 3 hours overdue; <span class="fbadge f-stale">Stale</span> 2 or more daily runs missed. The “Data as of” chips in each section show the real time of the underlying data.</li></ul></details>
+<div class="pub">Last published: <b id="pubAt">Sun, Oct 11, 2026, 8:32 AM PT</b></div>
+</div>
+<script>
+/* CantoGo shared UI helpers v2 — same block is inlined in both dashboards */
+const UI = (() => {
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmtN = n => { if (n == null || n === "" || isNaN(+n)) return "—"; n = +n; if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,"")+"M"; if (Math.abs(n) >= 1e4) return Math.round(n/1e3)+"K"; if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,"")+"K"; return String(Math.round(n*100)/100); };
+  const snip = (s, n) => { s = String(s || ""); return s.length > n ? s.slice(0, n-1) + "…" : s; };
+  const tip = t => `<i class="tip" tabindex="0" role="note" aria-label="${esc(t)}" data-tip="${esc(t)}">?</i>`;
+  /* page language, set by assemble.py from i18n.json ("zh" | "en") */
+  const LANG = "en", EN = LANG === "en";
+  /* ratio vs a baseline (1.0 = usual) → plain words */
+  const vsTxt = (x, who) => {
+    if (x == null || isNaN(+x)) return "—";
+    /*i18n-keep*/x = +x; who = who || (EN ? "usual" : "平时");
+    const p = Math.round((x - 1) * 100);
+    if (EN) {
+      if (x >= 2) return `${x.toFixed(1).replace(/\.0$/,"")}× ${who}`;
+      if (p === 0) return `same as ${who}`;
+      return p > 0 ? `${p}% above ${who}` : `${-p}% below ${who}`;
+    }
+    /*i18n-keep*/if (x >= 2) return `是${who}的 ${x.toFixed(1).replace(/\.0$/,"")} 倍`;
+    /*i18n-keep*/if (p === 0) return `和${who}持平`;
+    /*i18n-keep*/return p > 0 ? `比${who}高 ${p}%` : `比${who}低 ${-p}%`;
+  };
+  const vsCls = x => x == null ? "" : (+x >= 1.15 ? "up" : (+x <= 0.85 ? "down" : ""));
+  /*i18n-keep*/const SIG = {High:["强","High","▮▮▮"], Medium:["中","Medium","▮▮▯"], Low:["弱","Low","▮▯▯"]};
+  const sigBadge = s => { const m = SIG[s] || SIG.Low; return `<span class="badge sig-${esc(s in SIG ? s : "Low")}" title="signal strength"><span class="bars" aria-hidden="true">${m[2]}</span>${EN ? m[1] : m[0] + " " + m[1]}</span>`; };
+  const badge = (txt, cls) => txt ? `<span class="badge ${cls || "b-neutral"}">${esc(txt)}</span>` : "";
+  /* ---- time in Pacific Time + freshness (i18n 2026-10-11) ----
+     Schedule: the routine runs EVERY DAY (weekends included) at 8:58 AM PT; pages are usually live by ~9:30 AM PT.
+     Badge rule (same text is shown in the tooltip):
+       a daily run counts as done when the page was published at/after that day's 8:58 AM PT start;
+       a run is "missed" once it is more than 3 h past its ~9:30 AM PT target (i.e. after ~12:30 PM PT) without a publish;
+       Fresh = no missed run (published since the most recent daily window; a run < 3 h overdue still counts as Fresh, "pending")
+       Late  = exactly 1 missed run (today's run > 3 h overdue)
+       Stale = 2+ missed runs. */
+  const TZ = "America/Los_Angeles";
+  const RUN = {h: 8, m: 58}, LIVE = {h: 9, m: 30}, GRACE_H = 3;
+  const _ptFmt = new Intl.DateTimeFormat("en-US", {timeZone: TZ, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", hourCycle: "h23", weekday: "short"});
+  const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  function ptParts(d) {
+    const o = {}; _ptFmt.formatToParts(d).forEach(p => { o[p.type] = p.value; });
+    return {y: +o.year, mo: +o.month, d: +o.day, h: +o.hour % 24, mi: +o.minute, wd: WD.indexOf(o.weekday)};
+  }
+  /* PT wall-clock → Date (tries PDT/PST offsets; robust across DST) */
+  function ptDate(y, mo, d, h, mi) {
+    for (const off of [7, 8]) { const t = new Date(Date.UTC(y, mo - 1, d, h + off, mi)); const p = ptParts(t); if (p.h === h && p.d === d) return t; }
+    return new Date(Date.UTC(y, mo - 1, d, h + 7, mi));
+  }
+  const addDays = (p, n) => { const t = new Date(Date.UTC(p.y, p.mo - 1, p.d + n)); return {y: t.getUTCFullYear(), mo: t.getUTCMonth() + 1, d: t.getUTCDate()}; };
+  const parseT = v => { if (!v) return null; if (v instanceof Date) return v; const s = String(v);
+    if (/^\d{4}-\d\d-\d\d$/.test(s)) { const [y, mo, d] = s.split("-").map(Number); return ptDate(y, mo, d, 12, 0); }   /* date only → noon PT */
+    const m = s.match(/^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d)(?::\d\d)?\s*PT$/); if (m) return ptDate(+m[1], +m[2], +m[3], +m[4], +m[5]);
+    const d = new Date(s); return isNaN(d) ? null : d; };
+  /*i18n-keep*/const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], WDZ = "日一二三四五六";
+  const hm = p => `${(p.h % 12) || 12}:${String(p.mi).padStart(2, "0")} ${p.h < 12 ? "AM" : "PM"}`;
+  /* fmtPT(date, {time: true|false, year: true|false}) */
+  function fmtPT(d, o) {
+    o = Object.assign({time: true, year: true}, o || {}); const p = ptParts(d);
+    if (EN) return `${WD[p.wd]}, ${MON[p.mo - 1]} ${p.d}${o.year ? ", " + p.y : ""}${o.time ? ", " + hm(p) + " PT" : ""}`;
+    /*i18n-keep*/return `${o.year ? p.y + "年" : ""}${p.mo}月${p.d}日 周${WDZ[p.wd]}${o.time ? " · " + hm(p) + " PT" : ""}`;
+  }
+  const fmtDay = s => { const d = parseT(s); return d ? fmtPT(d, {time: false, year: false}) : String(s || "—"); };
+  function ago(d, now) {
+    if (!d || isNaN(d)) return "";
+    const mins = Math.max(0, ((now || new Date()) - d) / 6e4), h = mins / 60;
+    if (EN) { if (mins < 60) return mins < 2 ? "just now" : `${Math.round(mins)} minutes ago`;
+      if (h < 48) { const n = Math.round(h); return `${n} hour${n === 1 ? "" : "s"} ago`; }
+      const n = Math.floor(h / 24); return `${n} days ago`; }
+    /*i18n-keep*/if (mins < 60) return mins < 2 ? "刚刚" : `${Math.round(mins)} 分钟前`;
+    /*i18n-keep*/if (h < 48) return `${Math.round(h)} 小时前`;
+    /*i18n-keep*/return `${Math.floor(h / 24)} 天前`;
+  }
+  /* core rule; returns {state: fresh|late|stale|unknown, missed, pending, next, lastTarget} */
+  function freshState(pub, now) {
+    now = now || new Date(); pub = parseT(pub);
+    const n = ptParts(now), today = {y: n.y, mo: n.mo, d: n.d};
+    const tgt = p => ptDate(p.y, p.mo, p.d, LIVE.h, LIVE.m), start = p => ptDate(p.y, p.mo, p.d, RUN.h, RUN.m);
+    const todayT = tgt(today), tomorrow = addDays(today, 1);
+    let day = now >= todayT ? today : addDays(today, -1);   // most recent daily window whose ~9:30 target has passed
+    const lastTarget = tgt(day);
+    if (!pub) return {state: "unknown", missed: 0, pending: false, next: now < todayT ? todayT : tgt(tomorrow), lastTarget};
+    let missed = 0, pending = false;
+    for (let k = 0; k < 60 && start(day) > pub; k++, day = addDays(day, -1)) {
+      if (now - tgt(day) >= GRACE_H * 36e5) missed++; else pending = true;
+    }
+    const next = pending ? lastTarget : (now < todayT && pub < start(today) ? todayT : tgt(tomorrow));
+    return {state: missed >= 2 ? "stale" : missed === 1 ? "late" : "fresh", missed, pending, next, lastTarget};
+  }
+  const FL = {fresh: "Fresh", late: "Late", stale: "Stale", unknown: "Unknown"};
+  const freshBadge = (pub, now) => { const st = freshState(pub, now); return `<span class="fbadge f-${st.state}">${FL[st.state]}</span>`; };
+  /* header block: <div class="updated" id="freshBox" data-published="ISO"> with .fr-top/.v/.ago/.nx children */
+  function freshness(box) {
+    if (!box) return;
+    const meta = document.querySelector('meta[name="cg-published"]');
+    const pubS = box.dataset.published || (meta && meta.content);
+    const pub = parseT(pubS), now = new Date(), st = freshState(pub, now);
+    const q = s => box.querySelector(s);
+    q(".fr-top").innerHTML = `<span class="fbadge f-${st.state}" id="freshBadge" data-state="${st.state}">${FL[st.state]}</span>${tip("Freshness rule: the update runs every day at 8:58 AM PT (weekends included) and is usually live by ~9:30 AM PT. Fresh = published since the most recent daily run (a run that is less than 3 hours overdue still counts as Fresh and shows “today’s update is running”). Late = today’s run is more than 3 hours overdue (nothing new by ~12:30 PM PT). Stale = 2 or more daily runs missed.")}` +
+      (st.pending ? ` <span class="pend">today’s update is running</span>` : "");   /* on the badge row: keeps the box height fixed (no layout shift) */
+    q(".v").textContent = pub ? fmtPT(pub) : "—";
+    q(".v").dataset.iso = pub ? pub.toISOString() : "";
+    q(".ago").textContent = pub ? `(${ago(pub, now)})` : "";
+    const nd = st.next, np = ptParts(nd), sameDay = ptParts(now).d === np.d;
+    /*i18n-keep*/q(".nx").innerHTML = `Next update: <b data-iso="${nd.toISOString()}">${EN ? `${sameDay ? "today, " : ""}${WD[np.wd]}, ${MON[np.mo - 1]} ${np.d} ~9:30 AM PT` : `${sameDay ? "今天 " : ""}${np.mo}月${np.d}日 周${WDZ[np.wd]} 约 9:30 AM PT`}</b>`;
+    box.dataset.state = st.state;
+  }
+  /* "Data as of" chips: items = [[label, valueText, note]] */
+  const asof = (el, items) => { if (typeof el === "string") el = document.getElementById(el); if (!el) return;
+    el.innerHTML = items.filter(x => x && x[1]).map(x => `<span class="chip">Data as of <b>${esc(x[0])}</b> ${esc(x[1])}${x[2] ? ` <span class="n">${esc(x[2])}</span>` : ""}</span>`).join(""); };
+  /* sticky tabs: highlight the section in view.
+     Scroll-safe (2026-10-10 fix): never calls scrollIntoView/scrollTo on the document while the user scrolls.
+     The old IntersectionObserver version called a.scrollIntoView() on every section change; with
+     html{scroll-behavior:smooth} that started a programmatic root scroll which cancelled wheel/touch
+     momentum and pulled the page back (stuck + jumping). Now: passive scroll listener, rAF-throttled,
+     only toggles classes and scrolls the .tabs strip itself (horizontal, its own scroller). */
+  function initNav() {
+    const nav = document.querySelector(".nav"), tabs = document.querySelector(".tabs");
+    if (!nav || !tabs) return;
+    const links = [...tabs.querySelectorAll("a")];
+    const secs = [];
+    links.forEach(a => { const s = document.getElementById(a.getAttribute("href").slice(1)); if (s) secs.push([s, a]); else a.remove(); });
+    const root = document.documentElement;
+    const setNavH = () => root.style.setProperty("--navh", Math.round(nav.getBoundingClientRect().height) + "px");
+    setNavH();
+    if (window.ResizeObserver) new ResizeObserver(setNavH).observe(nav); else addEventListener("resize", setNavH);
+    let cur = null, ticking = false, pinned = null;
+    function activate(a) {
+      if (a === cur) return;
+      if (cur) cur.classList.remove("on");
+      cur = a; if (!a) return;
+      a.classList.add("on");
+      // keep the active pill visible inside the horizontal strip only (never touches window scroll)
+      const l = a.offsetLeft - tabs.offsetLeft, r = l + a.offsetWidth;
+      if (l < tabs.scrollLeft || r > tabs.scrollLeft + tabs.clientWidth)
+        tabs.scrollTo({left: Math.max(0, l - 16), behavior: "auto"});
+    }
+    function update() {
+      ticking = false;
+      const line = nav.getBoundingClientRect().bottom + 24;
+      let a = secs.length ? secs[0][1] : null;
+      for (const [s, l] of secs) { if (s.getBoundingClientRect().top <= line) a = l; else break; }
+      if (pinned) a = pinned;   // a tab jump is in progress or landed: keep the clicked tab until the user scrolls by hand
+      else if (secs.length && innerHeight + scrollY >= root.scrollHeight - 2) {   // at the very bottom: last visible section
+        for (const [s, l] of secs) if (s.getBoundingClientRect().top < innerHeight) a = l;
+      }
+      activate(a);
+    }
+    tabs.addEventListener("click", e => { const a = e.target.closest("a"); if (a) { pinned = a; activate(a); } });
+    ["wheel", "touchstart", "keydown"].forEach(t => addEventListener(t, () => { pinned = null; }, {passive: true}));
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    addEventListener("scroll", onScroll, {passive: true});
+    addEventListener("resize", onScroll, {passive: true});
+    update();
+  }
+  /* after "Show less" the list shrinks; if its top is now above the viewport, bring it back under the sticky nav (instant, one-shot) */
+  function keepInView(el) {
+    const navh = (document.querySelector(".nav") || {offsetHeight: 0}).offsetHeight;
+    const top = el.getBoundingClientRect().top;
+    if (top < navh) window.scrollTo({top: Math.max(0, scrollY + top - navh - 12), behavior: "instant"});
+  }
+  /* sortable + searchable + paged table; stacks into cards on phones */
+  function table(o) {
+    // o: {el, cols:[{k,label,render,num,sort:false,tip}], rows, page, sort:{k,d}, empty, count}
+    const st = {k: (o.sort||{}).k, d: (o.sort||{}).d || -1, shown: o.page || 20, q: ""};
+    const el = typeof o.el === "string" ? document.getElementById(o.el) : o.el;
+    el.innerHTML = `<div class="tw"><table class="t stack"><thead><tr>${o.cols.map(c => `<th ${c.sort === false ? "" : `data-k="${esc(c.k)}"`} scope="col">${esc(c.label)}${c.tip ? tip(c.tip) : ""}</th>`).join("")}</tr></thead><tbody></tbody></table></div><div class="more"></div>`;
+    const tb = el.querySelector("tbody"), more = el.querySelector(".more");
+    el.querySelectorAll("th[data-k]").forEach(th => th.addEventListener("click", e => { if (e.target.closest(".tip")) return; const k = th.dataset.k; st.d = st.k === k ? -st.d : -1; st.k = k; draw(); }));
+    function rows() {
+      let r = (typeof o.rows === "function" ? o.rows() : o.rows).filter(x => !st.q || JSON.stringify(x).toLowerCase().includes(st.q));
+      if (st.k) { const col = o.cols.find(c => c.k === st.k) || {}; const val = col.val || (x => x[st.k]);
+        r = r.slice().sort((a, b) => { const x = val(a), y = val(b); if (x == null || x === "") return 1; if (y == null || y === "") return -1; return (typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y))) * st.d; }); }
+      return r;
+    }
+    function draw() {
+      const r = rows();
+      el.querySelectorAll("th[data-k]").forEach(th => { th.classList.remove("asc","desc"); if (th.dataset.k === st.k) th.classList.add(st.d > 0 ? "asc" : "desc"); });
+      tb.innerHTML = r.slice(0, st.shown).map(x => `<tr>${o.cols.map(c => `<td data-label="${esc(c.label)}"${c.num ? ' class="num"' : ""}>${c.render ? c.render(x) : esc(x[c.k])}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${o.cols.length}" class="muted">${esc(o.empty || "No match")}</td></tr>`;
+      const left = r.length - st.shown;
+      more.innerHTML = left > 0 ? `<button class="btn" type="button">Show ${Math.min(left, o.page || 20)} more <span class="muted">(${left} of ${r.length} left)</span></button>` + (left > (o.page||20) ? ` <button class="btn" type="button" data-all="1">Show all</button>` : "") : (r.length > (o.page || 20) ? `<button class="btn" type="button" data-less="1">Show less</button>` : "");
+      more.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.less) { st.shown = o.page || 20; draw(); keepInView(el); } else { st.shown = b.dataset.all ? 1e9 : st.shown + (o.page || 20); draw(); } });
+      if (o.count) o.count(r.length);
+    }
+    draw();
+    return { draw, search(q) { st.q = String(q || "").trim().toLowerCase(); st.shown = o.page || 20; draw(); } };
+  }
+  /* card list with show-more */
+  function list(o) {
+    // o: {el, items: fn|array, render, page, empty, count, cls}
+    const el = typeof o.el === "string" ? document.getElementById(o.el) : o.el;
+    const pg = o.page || 6; let shown = pg;
+    function draw(reset) {
+      if (reset) shown = pg;
+      const items = typeof o.items === "function" ? o.items() : o.items;
+      el.innerHTML = items.length ? `<div class="${o.cls || "cards"}">${items.slice(0, shown).map(o.render).join("")}</div>` : `<div class="empty">${esc(o.empty || "No match")}</div>`;
+      const left = items.length - shown;
+      if (left > 0 || items.length > pg) {
+        const m = document.createElement("div"); m.className = "more";
+        m.innerHTML = left > 0 ? `<button class="btn" type="button" data-n="1">Show ${Math.min(left, pg * 2)} more <span class="muted">(${left} of ${items.length} left)</span></button>` + (left > pg * 2 ? ` <button class="btn" type="button" data-all="1">Show all</button>` : "") : `<button class="btn" type="button" data-less="1">Show less</button>`;
+        m.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.less) { shown = pg; draw(); keepInView(el); } else { shown = b.dataset.all ? items.length : shown + pg * 2; draw(); } });
+        el.appendChild(m);
+      }
+      if (o.count) o.count(items.length);
+    }
+    draw();
+    return { draw };
+  }
+  /* tooltips: anchor to the left/right when centring would push the bubble off-screen (desktop; phones use a bottom sheet in CSS) */
+  function placeTip(e) {
+    const t = e.target && e.target.closest && e.target.closest(".tip"); if (!t) return;
+    t.classList.remove("tip-l", "tip-r");
+    const r = t.getBoundingClientRect(), W = document.documentElement.clientWidth, half = 150;
+    if (r.left + r.width / 2 - half < 8) t.classList.add("tip-l");
+    else if (r.left + r.width / 2 + half > W - 8) t.classList.add("tip-r");
+  }
+  document.addEventListener("pointerover", placeTip, {passive: true});
+  document.addEventListener("focusin", placeTip);
+  /* ---- post thumbnails (2026-10-10) ----
+     Each page embeds D.thumbs = {shortcode: [w, h]}, built by its generator from /workspace/pages/thumbs/manifest.json
+     (only width/height; no manifest internals). Images load from the RELATIVE path thumbs/<shortcode>.jpg, which
+     publish.sh copies next to the pages. Every <img> has width/height + a fixed 4:5 frame (no layout shift),
+     loading="lazy" and decoding="async". Strips are plain overflow-x scrollers: no wheel/touch listeners at all. */
+  const SC_RE = /instagram\.com\/(?:[^\/?#]+\/)?(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/;
+  const shortcode = u => { const m = SC_RE.exec(String(u || "")); return m ? m[1] : null; };
+  let THUMBS = {};
+  const setThumbs = t => { THUMBS = t || {}; };
+  const hasThumb = u => { const sc = shortcode(u); return !!(sc && THUMBS[sc]); };
+  const thumbPh = h => `<span class="th-ph" aria-hidden="true"><span class="th-ph-i">▶</span><span class="th-ph-h">${esc(h || "Instagram")}</span><span class="th-ph-n">No preview</span></span>`;
+  /* o: {url, handle, date, perf, perfCls, extra, size: "s"|"m", meta: false to hide the caption lines, hidden} */
+  function thumb(o) {
+    const sc = shortcode(o.url), t = sc && THUMBS[sc], h = String(o.handle || "");
+    const media = t ? `<img class="th-img" src="../thumbs/${encodeURIComponent(sc)}.jpg" width="${+t[0]}" height="${+t[1]}" loading="lazy" decoding="async" alt="${esc(h + " " + (o.date || "") + " post preview")}">` : thumbPh(h);
+    const meta = o.meta === false ? "" : `<span class="th-meta"><b class="th-h">${esc(h)}</b>${o.perf ? `<span class="th-p ${o.perfCls || ""}">${esc(o.perf)}</span>` : ""}<span class="th-d">${esc([o.date, o.extra].filter(Boolean).join(" · "))}</span></span>`;
+    const link = o.url ? ` href="${esc(o.url)}" target="_blank" rel="noopener" title="${esc("Open on Instagram · " + h)}"` : "";
+    return `<${o.url ? "a" : "div"} class="th th-${o.size || "m"}${t ? "" : " th-missing"}"${link}${o.hidden ? " hidden" : ""}><span class="th-f">${media}</span>${meta}</${o.url ? "a" : "div"}>`;
+  }
+  /* horizontal strip: first `visible` thumbnails shown, the rest behind a "show more" tile (hidden = not loaded) */
+  function strip(items, o) {
+    o = o || {}; const n = o.visible || 6;
+    if (!items.length) return o.empty ? `<div class="small muted">${esc(o.empty)}</div>` : "";
+    const rest = items.length - n;
+    return `<div class="thstrip" aria-label="${esc(o.label || "Post previews")}">${items.map((x, i) => thumb(Object.assign({}, x, {hidden: i >= n}))).join("")}` +
+      (rest > 0 ? `<button type="button" class="th-more" aria-expanded="false" data-v="${n}" data-n="${rest}"><span class="a">Show more</span><b>+${rest}</b><span class="e">posts</span></button>` : "") + `</div>`;
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest && e.target.closest(".th-more"); if (!b) return;
+    const open = b.getAttribute("aria-expanded") !== "true", v = +b.dataset.v || 6;
+    b.parentElement.querySelectorAll(".th").forEach((t, i) => { if (i >= v) t.hidden = !open; });
+    b.setAttribute("aria-expanded", String(open));
+    b.innerHTML = open ? `<span class="a">Show less</span><b>−</b><span class="e">&nbsp;</span>` : `<span class="a">Show more</span><b>+${esc(b.dataset.n)}</b><span class="e">posts</span>`;
+  });
+  /* a thumbnail file that fails to load becomes the same-size placeholder (frame keeps its size → no shift) */
+  document.addEventListener("error", e => {
+    const im = e.target; if (!im || !im.classList || !im.classList.contains("th-img")) return;
+    const th = im.closest(".th"); if (th) { th.classList.add("th-missing"); th.dataset.broken = "1"; }
+    im.outerHTML = thumbPh(th ? (th.querySelector(".th-h") || {}).textContent || "" : "");
+  }, true);
+  return { LANG, EN, shortcode, setThumbs, hasThumb, thumb, strip, esc, fmtN, snip, tip, vsTxt, vsCls, sigBadge, badge, ago, freshness, freshState, freshBadge, fmtPT, fmtDay, parseT, ptParts, asof, initNav, table, list };
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+  /* each card: last-updated time + freshness badge (same rule as the dashboard headers) */
+  document.querySelectorAll("a.card[data-published]").forEach(a => {
+    const d = UI.parseT(a.dataset.published), el = a.querySelector(".cfresh");
+    if (!d) { el.innerHTML = UI.freshBadge(null); return; }
+    el.innerHTML = `${UI.freshBadge(d)}<span>Last updated <b data-iso="${d.toISOString()}">${UI.esc(UI.fmtPT(d))}</b> (${UI.esc(UI.ago(d))})</span>`;
+  });
+  const m = document.querySelector('meta[name="cg-published"]'), d = m && UI.parseT(m.content);
+  if (d) document.getElementById("pubAt").textContent = UI.fmtPT(d);
+})();
+</script>
+</body></html>

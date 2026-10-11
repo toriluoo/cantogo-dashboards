@@ -5,7 +5,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="data:,">
-<meta name="cg-published" content="2026-10-11T09:24:11-07:00">
+<meta name="cg-published" content="2026-10-11T11:14:03-07:00">
 <meta name="cg-page" content="index">
 <title>CantoGo Dashboards</title>
 <style>
@@ -270,6 +270,13 @@ html[lang="en"]{--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helve
 
 /* render gate: see the <head> script; <main> becomes visible once the page script has run */
 html.cg-pending main.wrap{visibility:hidden}
+/* CLS fix 2026-10-11: #freshBox is filled by UI.freshness after load; its content width differs by language
+   (zh date line ~381px vs en ~318px). With a content-sized box the zh header row overflowed (640 + 24 + 415 > 1072)
+   and the box wrapped under the title after load (CLS 0.11-0.16). Fixed width = layout decided before JS runs. */
+@media (min-width:641px){
+  .hdr .row > div:first-child{flex:1 1 360px;min-width:0}
+  .hdr .row > .updated{box-sizing:border-box;flex:0 0 430px;width:430px;min-width:0;max-width:none}
+}
 
 .lwrap{max-width:780px;margin:0 auto;padding:40px 24px 64px}
 .lwrap h1{margin:2px 0 6px;font-size:30px;line-height:1.25} .lwrap h1 small{font-size:20px;color:var(--muted);font-weight:600;margin-left:6px}
@@ -294,10 +301,10 @@ a.card .go{display:inline-block;margin-top:12px;font-weight:700;color:var(--acce
 <h1>Dashboards</h1>
 <div class="intro"><p><b>What is this?</b> CantoGo is an app for learning Cantonese vocabulary — everyday, spoken Hong Kong Cantonese, aimed especially at heritage learners in the diaspora. These two dashboards are our research notebook: <b>Trends</b> tracks which Cantonese-teaching topics are proven to work for other Instagram creators and what learners struggle with on Reddit, and <b>Distribution Experiments</b> logs every post and channel test for our own @canto.go account. The goal is to find proven topics and the best distribution channels, then double down on what works.</p></div>
 <p class="lead">10 minutes a day: start with the “Today’s highlights” box at the top of each dashboard.</p>
-<a class="card" href="distribution.html" data-published="2026-10-11T09:24:11-07:00"><h2>Distribution Experiments</h2><p>Experiments on IG / TikTok / YouTube Shorts / Facebook Groups: post performance, what we learned, and the next tests to run.</p><div class="cfresh"></div><span class="go">Open →</span></a>
-<a class="card" href="trends.html" data-published="2026-10-11T09:24:11-07:00"><h2>Trends</h2><p>Topic signals from Cantonese-teaching Instagram creators, rising topics, Reddit learner pain points and a daily digest.</p><div class="cfresh"></div><span class="go">Open →</span></a>
+<a class="card" href="distribution.html" data-published="2026-10-11T11:14:03-07:00"><h2>Distribution Experiments</h2><p>Experiments on IG / TikTok / YouTube Shorts / Facebook Groups: post performance, what we learned, and the next tests to run.</p><div class="cfresh"></div><span class="go">Open →</span></a>
+<a class="card" href="trends.html" data-published="2026-10-11T11:14:03-07:00"><h2>Trends</h2><p>Topic signals from Cantonese-teaching Instagram creators, rising topics, Reddit learner pain points and a daily digest.</p><div class="cfresh"></div><span class="go">Open →</span></a>
 <details class="howup"><summary>How updates work</summary><ul><li><b>Updated automatically every day (weekends included)</b>: the routine starts at 8:58 AM PT and the new pages are usually live by about 9:30 AM PT.</li><li><b>What each run collects</b>: new posts from the tracked Instagram creators; @canto.go posts and Insights; new Reddit learner pain points (the Reddit archive can lag 1–3 days, so the newest threads may show up a day or two late); Victoria’s hand edits from the Google Sheets in the “CantoGo Live” Drive folder. It then rebuilds both dashboards in Chinese and English and publishes them.</li><li><b>Edits in the CantoGo Live Sheets</b> show up after the next run (normally the next morning).</li><li><b>Posts published over the weekend</b> are picked up by the next morning’s run (the routine runs on weekends too).</li><li><b>Freshness badge</b>: <span class="fbadge f-fresh">Fresh</span> published since the most recent daily run; <span class="fbadge f-late">Late</span> today’s run is more than 3 hours overdue; <span class="fbadge f-stale">Stale</span> 2 or more daily runs missed. The “Data as of” chips in each section show the real time of the underlying data.</li></ul></details>
-<div class="pub">Last published: <b id="pubAt">Sun, Oct 11, 2026, 9:24 AM PT</b></div>
+<div class="pub">Last published: <b id="pubAt">Sun, Oct 11, 2026, 11:14 AM PT</b></div>
 </div>
 <script>
 /* CantoGo shared UI helpers v2 — same block is inlined in both dashboards */

@@ -5,7 +5,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="data:,">
-<meta name="cg-published" content="2026-10-13T09:43:53-07:00">
+<meta name="cg-published" content="2026-10-14T09:18:03-07:00">
 <meta name="cg-page" content="index">
 <title>CantoGo 数据看板 Dashboards</title>
 <style>
@@ -22,10 +22,10 @@
   --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Noto Sans SC","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 }
 *{box-sizing:border-box}
-html{scroll-padding-top:var(--navh,60px);  /* --navh = live sticky-nav height, set by UI.initNav; section padding-top gives the gap */
+html{scroll-padding-top:var(--navh,60px);overflow-x:clip;  /* --navh = live sticky-nav height, set by UI.initNav; section padding-top gives the gap */
   -webkit-text-size-adjust:100%}
 @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--font)}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--font);overflow-x:clip}
 a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(15,118,110,.35)}
 a:hover{text-decoration-color:currentColor}
 :focus-visible{outline:3px solid #5eead4;outline-offset:2px;border-radius:6px}
@@ -46,7 +46,7 @@ a:hover{text-decoration-color:currentColor}
 /* sticky nav */
 .nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.97);backdrop-filter:saturate(1.4) blur(6px);border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
 .nav .wrap{display:flex;align-items:center;gap:12px}
-.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;padding:8px 0}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;padding:8px 0;touch-action:pan-x;-webkit-overflow-scrolling:touch}
 .tabs::-webkit-scrollbar{display:none}
 .tabs a{flex:none;text-decoration:none;color:var(--text2);font-size:15px;font-weight:600;padding:8px 14px;border-radius:999px;white-space:nowrap}
 .tabs a:hover{background:var(--bg2)}
@@ -301,10 +301,10 @@ a.card .go{display:inline-block;margin-top:12px;font-weight:700;color:var(--acce
 <h1>数据看板<small>Dashboards</small></h1>
 
 <p class="lead">每天 10 分钟：先看每个看板最上面的「今日重点 Today」。</p>
-<a class="card" href="distribution.html" data-published="2026-10-13T09:43:53-07:00"><h2>渠道实验 <span class="en">Distribution Experiments</span></h2><p>IG / TikTok / YT Shorts / FB Groups 的实验、帖子表现、学到什么、下一步测试。</p><div class="cfresh"></div><span class="go">打开 Open →</span></a>
-<a class="card" href="trends.html" data-published="2026-10-13T09:43:53-07:00"><h2>趋势研究 <span class="en">Trends</span></h2><p>IG 博主选题信号、上升中的选题、Reddit 学习者痛点、每日简报。</p><div class="cfresh"></div><span class="go">打开 Open →</span></a>
+<a class="card" href="distribution.html" data-published="2026-10-14T09:18:03-07:00"><h2>渠道实验 <span class="en">Distribution Experiments</span></h2><p>IG / TikTok / YT Shorts / FB Groups 的实验、帖子表现、学到什么、下一步测试。</p><div class="cfresh"></div><span class="go">打开 Open →</span></a>
+<a class="card" href="trends.html" data-published="2026-10-14T09:18:03-07:00"><h2>趋势研究 <span class="en">Trends</span></h2><p>IG 博主选题信号、上升中的选题、Reddit 学习者痛点、每日简报。</p><div class="cfresh"></div><span class="go">打开 Open →</span></a>
 <details class="howup"><summary>更新机制 How updates work</summary><ul><li><b>每天自动更新（包括周末）</b>：每天 8:58 AM PT 开始运行，通常 9:30 AM PT 左右上线。</li><li><b>每次运行收集</b>：扫描追踪中的 IG 博主新帖；拉取 @canto.go 的帖子和 Insights；收集 Reddit 学习者痛点（Reddit 存档可能延迟 1–3 天，最新的帖子可能晚一两天才出现）；合并 Drive「CantoGo Live」文件夹里 Google Sheets 的手动修改；然后重新生成中文和英文看板并发布。</li><li><b>在 CantoGo Live Sheets 里的修改</b>会在下一次运行后出现在看板上（通常是第二天早上）。</li><li><b>周末发的帖子</b>会在第二天早上的运行中收进来（周末也照常运行）。</li><li><b>新鲜度标记</b>：<span class="fbadge f-fresh">最新 Fresh</span> 最近一次每日运行之后已发布；<span class="fbadge f-late">延迟 Late</span> 今天的运行超时 3 小时以上；<span class="fbadge f-stale">过期 Stale</span> 错过 2 次或以上每日运行。每个区块的「数据截至」标签显示底层数据的真实时间。</li></ul></details>
-<div class="pub">最后发布 Last published： <b id="pubAt">2026年10月13日 周二 · 9:43 AM PT</b></div>
+<div class="pub">最后发布 Last published： <b id="pubAt">2026年10月14日 周三 · 9:18 AM PT</b></div>
 </div>
 <script>
 /* CantoGo shared UI helpers v2 — same block is inlined in both dashboards */
@@ -453,12 +453,46 @@ const UI = (() => {
       }
       activate(a);
     }
-    tabs.addEventListener("click", e => { const a = e.target.closest("a"); if (a) { pinned = a; activate(a); } });
+    /* Instant jump under the sticky nav. Native #hash + smooth scroll undershoots on tall
+       pages (distribution) when earlier sections still layout-shift during the animation —
+       landing the h2 ~300px too low. preventDefault + scrollTo(instant) is reliable. */
+    function jumpTo(a, pushHash) {
+      if (!a) return;
+      const id = (a.getAttribute("href") || "").slice(1);
+      const s = id && document.getElementById(id);
+      if (!s) return;
+      pinned = a; activate(a);
+      const navh = Math.round(nav.getBoundingClientRect().height);
+      const y = Math.max(0, Math.round(s.getBoundingClientRect().top + scrollY - navh));
+      window.scrollTo({top: y, behavior: "instant"});
+      if (pushHash && history.state !== null) {
+        const url = location.pathname + location.search + "#" + id;
+        if (location.hash !== "#" + id) history.pushState(null, "", url);
+      }
+    }
+    tabs.addEventListener("click", e => {
+      const a = e.target.closest("a"); if (!a) return;
+      e.preventDefault();
+      jumpTo(a, true);
+    });
+    addEventListener("hashchange", () => {
+      const a = tabs.querySelector(`a[href="${CSS.escape(location.hash)}"]`);
+      if (a) jumpTo(a, false);
+    });
+    addEventListener("popstate", () => {
+      const a = location.hash ? tabs.querySelector(`a[href="${CSS.escape(location.hash)}"]`) : secs[0] && secs[0][1];
+      if (a) jumpTo(a, false);
+    });
     ["wheel", "touchstart", "keydown"].forEach(t => addEventListener(t, () => { pinned = null; }, {passive: true}));
     const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
     addEventListener("scroll", onScroll, {passive: true});
     addEventListener("resize", onScroll, {passive: true});
     update();
+    // Initial hash (e.g. distribution.html#hyps) after layout — rAF so --navh is set
+    if (location.hash) requestAnimationFrame(() => {
+      const a = tabs.querySelector(`a[href="${CSS.escape(location.hash)}"]`);
+      if (a) jumpTo(a, false);
+    });
   }
   /* after "Show less" the list shrinks; if its top is now above the viewport, bring it back under the sticky nav (instant, one-shot) */
   function keepInView(el) {

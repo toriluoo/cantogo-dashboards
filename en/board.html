@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<meta name="cg-page" content="board">
+<title>CantoGo Ideas board</title>
+<link rel="stylesheet" href="../board.css">
+</head>
+<body>
+<header class="hdr"><div class="wrap">
+  <div class="row">
+    <div>
+      <div class="toprow"><div class="kicker">CantoGo · Daily content</div><span class="lang" aria-label="Language"><a href="../board.html" hreflang="zh-Hans" lang="zh-Hans">中文</a><span class="sep">/</span><span aria-current="page" lang="en">English</span></span></div>
+      <h1>Ideas board<small>今日选题</small></h1>
+      <p class="lead">Today’s 7 proposals. Scan the vocab, the signal, and the channel, then approve, defer, or skip. These buttons do not write to the Google Sheet.</p>
+    </div>
+    <div class="updated" role="status">
+      <div class="l">Board date</div>
+      <div class="v" id="boardDate">2026-10-26</div>
+      <div class="s">Source: overnight signals. Figures are copied, not estimated.</div>
+    </div>
+  </div>
+  <div class="asof" aria-label="Data as of">
+    <span class="chip">Data as of <b>Trends / distribution export</b> 2026-10-25</span>
+    <span class="chip">Data as of <b>overnight signals</b> 2026-10-26</span>
+    <span class="chip">File <b>ideas_today.json</b></span>
+  </div>
+  <div class="links">
+    <a href="../index.html">→ Dashboards</a>
+    <a href="trends.html">→ Trends</a>
+    <a href="distribution.html">→ Distribution</a>
+  </div>
+</div></header>
+
+<nav class="nav" aria-label="Pages"><div class="wrap">
+  <div class="tabs">
+    <a class="on" href="board.html" aria-current="page">Ideas</a>
+    <a href="#flow">Pipeline</a>
+    <a href="#ideas">Today’s 7</a>
+    <a href="trends.html">Trends</a>
+    <a href="distribution.html">Distribution</a>
+  </div>
+</div></nav>
+
+<main class="wrap">
+  <section class="pipewrap" id="flow" aria-label="Pipeline">
+    <h2>Pipeline</h2>
+    <ol class="pipe">
+      <li><span>Propose</span></li>
+      <li><span>Approve</span></li>
+      <li><span>Chat images</span></li>
+      <li><span>Vic QA</span></li>
+      <li><span>Claude HTML</span></li>
+      <li><span>Post</span></li>
+    </ol>
+    <p class="hint">点 Approve 后在 CantoGo 聊天里贴一下 / paste the command in CantoGo chat. Approve, Defer, and Skip copy a command and save progress in this browser until the bot syncs. They do not write the Sheet.</p>
+  </section>
+
+  <aside class="tonight" id="tonight">
+    <span class="k">Tonight’s pipeline</span>
+    <span id="tonightText">The Halloween Reel is in Chat → Claude. This board is for the next daily ideas, not tonight’s Reel.</span>
+  </aside>
+
+  <div class="bar" id="ideasHead">
+    <h2>Today’s 7 <span class="en">proposals</span></h2>
+    <div><span id="tally"></span> <button type="button" class="btn" id="clearLocal" style="margin-left:8px">Clear local marks</button></div>
+  </div>
+  <div class="ideas" id="ideas" data-src="../ideas_today.json" aria-live="polite"></div>
+  <p class="note" id="jpNote">Jyutping is copied from the overnight signals report.</p>
+  <noscript><p class="empty">JavaScript is required to draw the cards from ideas_today.json.</p></noscript>
+</main>
+
+<footer class="ft"><div class="wrap">Static page. Overwrite <code>ideas_today.json</code> to load another day’s 7. IG and TikTok share this board; TikTok is only a channel field. Status badges: proposed, approved, in_chat, qa, claude, done, plus local deferred / skipped.</div></footer>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="../board.js"></script>
+</body>
+</html>

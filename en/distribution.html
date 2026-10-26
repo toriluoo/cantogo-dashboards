@@ -51,6 +51,8 @@ a:hover{text-decoration-color:currentColor}
 .tabs a{flex:none;text-decoration:none;color:var(--text2);font-size:15px;font-weight:600;padding:8px 14px;border-radius:999px;white-space:nowrap}
 .tabs a:hover{background:var(--bg2)}
 .tabs a.on{background:var(--text);color:#fff}
+a.cross{flex:none;text-decoration:none;color:var(--accent-ink);font-size:15px;font-weight:700;padding:8px 14px;border-radius:999px;border:1px solid #b7e1db;background:var(--accent-soft);white-space:nowrap}
+a.cross:hover{border-color:var(--accent);text-decoration:none}
 .nav input[type=search]{width:260px;flex:none}
 /* sections */
 main{padding-bottom:72px}
@@ -308,12 +310,14 @@ document.documentElement.classList.add("cg-pending"); setTimeout(() => document.
   </div>
   <div class="asof" id="asofHdr" aria-label="Data as of"><span class="chip">Data as of <b>@canto.go Insights check date:</b> Sun, Oct 25</span><span class="chip">Data as of <b>Sheet sync:</b> Sun, Oct 25, 9:14 AM PT</span></div>
   <div class="links">
+    <a href="board.html">→ Ideas board</a>
     <a href="https://toriluoo.github.io/cantogo-dashboards/en/trends.html">→ Trends dashboard</a>
     <a id="sheetLink" target="_blank" rel="noopener">Open the Google Sheet ↗</a>
   </div>
 </div></header>
 
 <nav class="nav" aria-label="Sections"><div class="wrap">
+  <a class="cross" href="board.html">Ideas</a>
   <div class="tabs">
     <a href="#today">Today</a><a href="#hyps">Hypotheses</a><a href="#overview">Account</a><a href="#channels">Channels</a><a href="#exps">Experiments</a>
     <a href="#posts">Posts</a><a href="#learn">Learnings</a><a href="#next">Next tests</a>

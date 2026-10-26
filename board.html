@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<meta name="cg-page" content="board">
+<title>CantoGo 今日选题 Ideas board</title>
+<link rel="stylesheet" href="board.css">
+</head>
+<body>
+<header class="hdr"><div class="wrap">
+  <div class="row">
+    <div>
+      <div class="toprow"><div class="kicker">CantoGo · 每日内容</div><span class="lang" aria-label="语言 Language"><span aria-current="page" lang="zh-Hans">中文</span><span class="sep">/</span><a href="en/board.html" hreflang="en" lang="en">English</a></span></div>
+      <h1>今日选题<small>Ideas board</small></h1>
+      <p class="lead">今天的 7 条提议。看一眼词、信号和渠道，再批准、延后或跳过。按钮不会写入 Google Sheet。</p>
+    </div>
+    <div class="updated" role="status">
+      <div class="l">选题日期 Board date</div>
+      <div class="v" id="boardDate">2026-10-26</div>
+      <div class="s">来源 Overnight signals · 数字只照录报告</div>
+    </div>
+  </div>
+  <div class="asof" aria-label="数据截至">
+    <span class="chip">数据截至 <b>趋势 / 分发导出</b> 2026-10-25</span>
+    <span class="chip">数据截至 <b>overnight signals</b> 2026-10-26</span>
+    <span class="chip">文件 <b>ideas_today.json</b></span>
+  </div>
+  <div class="links">
+    <a href="index.html">→ 看板首页 Dashboards</a>
+    <a href="trends.html">→ 趋势研究 Trends</a>
+    <a href="distribution.html">→ 渠道实验 Distribution</a>
+  </div>
+</div></header>
+
+<nav class="nav" aria-label="页面导航"><div class="wrap">
+  <div class="tabs">
+    <a class="on" href="board.html" aria-current="page">选题板</a>
+    <a href="#flow">流水线</a>
+    <a href="#ideas">今日 7 条</a>
+    <a href="trends.html">趋势</a>
+    <a href="distribution.html">渠道</a>
+  </div>
+</div></nav>
+
+<main class="wrap">
+  <section class="pipewrap" id="flow" aria-label="流水线">
+    <h2>流水线 <span class="muted" style="font-size:16px;font-weight:600">Pipeline</span></h2>
+    <ol class="pipe">
+      <li><span>提议 Propose</span></li>
+      <li><span>批准 Approve</span></li>
+      <li><span>聊天出图 Chat images</span></li>
+      <li><span>Vic 审图 Vic QA</span></li>
+      <li><span>Claude HTML</span></li>
+      <li><span>发布 Post</span></li>
+    </ol>
+    <p class="hint">点 Approve 后在 CantoGo 聊天里贴一下 / paste the command in CantoGo chat。批准、延后、跳过都会复制指令，并把进度记在这台浏览器里，等 bot 同步。不会写入 Sheet。</p>
+  </section>
+
+  <aside class="tonight" id="tonight">
+    <span class="k">今晚流水线 Tonight’s pipeline</span>
+    <span id="tonightText">Halloween Reel 正在 Chat → Claude。这块板是下一组每日选题，不是今晚那条。</span>
+  </aside>
+
+  <div class="bar" id="ideasHead">
+    <h2>今日 7 条 <span class="en">Today’s proposals</span></h2>
+    <div><span id="tally"></span> <button type="button" class="btn" id="clearLocal" style="margin-left:8px">清除本机标记</button></div>
+  </div>
+  <div class="ideas" id="ideas" data-src="ideas_today.json" aria-live="polite"></div>
+  <p class="note" id="jpNote">粤拼按 overnight signals 原文照录。</p>
+  <noscript><p class="empty">需要 JavaScript 才能从 ideas_today.json 画出卡片。</p></noscript>
+</main>
+
+<footer class="ft"><div class="wrap">静态页。每日流程覆盖 <code>ideas_today.json</code> 即可换一天的 7 条。IG 和 TikTok 在同一块板上，TikTok 只是 channel。状态徽章：proposed · approved · in_chat · qa · claude · done，外加本机的 deferred / skipped。</div></footer>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="board.js"></script>
+</body>
+</html>

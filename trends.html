@@ -51,6 +51,8 @@ a:hover{text-decoration-color:currentColor}
 .tabs a{flex:none;text-decoration:none;color:var(--text2);font-size:15px;font-weight:600;padding:8px 14px;border-radius:999px;white-space:nowrap}
 .tabs a:hover{background:var(--bg2)}
 .tabs a.on{background:var(--text);color:#fff}
+a.cross{flex:none;text-decoration:none;color:var(--accent-ink);font-size:15px;font-weight:700;padding:8px 14px;border-radius:999px;border:1px solid #b7e1db;background:var(--accent-soft);white-space:nowrap}
+a.cross:hover{border-color:var(--accent);text-decoration:none}
 .nav input[type=search]{width:260px;flex:none}
 /* sections */
 main{padding-bottom:72px}
@@ -301,6 +303,7 @@ document.documentElement.classList.add("cg-pending"); setTimeout(() => document.
   </div>
   <div class="asof" id="asofHdr" aria-label="数据截至"><span class="chip">数据截至 <b>IG 博主扫描</b> 10月25日 周日 · 9:18 AM PT</span><span class="chip">数据截至 <b>Reddit 最新帖子</b> 10月24日 周六 <span class="n">（Reddit 存档可能延迟 1–3 天）</span></span><span class="chip">数据截至 <b>Sheet 同步</b> 10月25日 周日 · 9:19 AM PT</span></div>
   <div class="links">
+    <a href="board.html">→ 今日选题 Ideas board</a>
     <a href="https://toriluoo.github.io/cantogo-dashboards/distribution.html">→ 渠道实验 Distribution dashboard</a>
     <a href="https://docs.google.com/spreadsheets/d/1Sk5jv6clrKtYFtfNjRR8MbYu7CzcojovOfjYvtd5L_0/edit" target="_blank" rel="noopener">打开 Google Sheet ↗</a>
     <span class="muted small" id="builtAt"></span>
@@ -308,6 +311,7 @@ document.documentElement.classList.add("cg-pending"); setTimeout(() => document.
 </div></header>
 
 <nav class="nav" aria-label="页面导航 Sections"><div class="wrap">
+  <a class="cross" href="board.html">选题板</a>
   <div class="tabs">
     <a href="#today">今日重点</a><a href="#topics">选题信号</a><a href="#rising">上升中</a><a href="#own">我们的账号</a>
     <a href="#reddit">Reddit 痛点</a><a href="#creators">博主</a><a href="#posts">IG 帖子</a><a href="#digest">每日简报</a>
